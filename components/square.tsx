@@ -1,14 +1,21 @@
 import { Monster } from "@/types/monsterTypes";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text } from "react-native";
 
 type Props = {
   isRevealed: boolean;
   flag: number;
   value: number;
   monster: Monster | undefined;
+  onPress?: () => void;
 };
 
-export default function Square({ isRevealed, flag, value, monster }: Props) {
+export default function Square({
+  isRevealed,
+  flag,
+  value,
+  monster,
+  onPress,
+}: Props) {
   let text: string = "";
 
   if (isRevealed) {
@@ -18,7 +25,8 @@ export default function Square({ isRevealed, flag, value, monster }: Props) {
   }
 
   return (
-    <View
+    <Pressable
+      onPress={onPress}
       style={[
         styles.container,
         isRevealed ? styles.revealed : styles.notRevealed,
@@ -29,7 +37,7 @@ export default function Square({ isRevealed, flag, value, monster }: Props) {
       ) : (
         <Text style={styles.text}> {text} </Text>
       )}
-    </View>
+    </Pressable>
   );
 }
 

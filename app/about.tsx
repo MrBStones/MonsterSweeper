@@ -19,7 +19,13 @@ export default function SquareTestScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.squareContainer, { width: containerWidth }]}>
-        <Square isRevealed={false} flag={0} monster={monster} value={0} />
+        <Square
+          isRevealed={false}
+          flag={0}
+          monster={monster}
+          value={0}
+          onPress={() => alert("hi")}
+        />
         <Square isRevealed={true} flag={0} monster={undefined} value={0} />
         <Square isRevealed={false} flag={1} monster={monster} value={0} />
         <Square isRevealed={true} flag={123} monster={monster} value={10} />
