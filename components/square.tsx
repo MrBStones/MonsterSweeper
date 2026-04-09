@@ -1,10 +1,11 @@
 import { Monster } from "@/types/monsterTypes";
 import { Image, Pressable, StyleSheet, Text } from "react-native";
 
-type Props = {
+export type SquareProps = {
   isRevealed: boolean;
   flag: number;
   value: number;
+  hideMonster: boolean;
   monster: Monster | undefined;
   onPress?: () => void;
 };
@@ -13,13 +14,14 @@ export default function Square({
   isRevealed,
   flag,
   value,
+  hideMonster = false,
   monster,
   onPress,
-}: Props) {
+}: SquareProps) {
   let text: string = "";
 
   if (isRevealed) {
-    text = value <= 0 ? "" : value + "";
+    text = value <= 0 && !hideMonster ? "" : value + "";
   } else {
     text = flag <= 0 ? "" : flag + "";
   }
@@ -32,10 +34,19 @@ export default function Square({
         isRevealed ? styles.revealed : styles.notRevealed,
       ]}
     >
-      {isRevealed && monster !== undefined ? (
+      {isRevealed && monster !== undefined && !hideMonster ? (
         <Image source={monster.imgSource} style={styles.monsterImage} />
       ) : (
-        <Text style={styles.text}> {text} </Text>
+        <Text
+          selectable={false}
+          style={
+            isRevealed && hideMonster && monster !== undefined
+              ? styles.numMonsterHidden
+              : styles.num
+          }
+        >
+          {text}
+        </Text>
       )}
     </Pressable>
   );
@@ -54,8 +65,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   notRevealed: { backgroundColor: "#464646" },
-  text: {
+  num: {
     color: "#fff",
+    fontWeight: "bold",
+    fontSize: 24,
+  },
+  numMonsterHidden: {
+    color: "#00e24b",
     fontWeight: "bold",
     fontSize: 24,
   },
