@@ -6,7 +6,7 @@ export default function Index() {
     <View style={styles.container}>
       <Text style={styles.title}>Monster Sweeper</Text>
       <Link href="/about" style={styles.button}>
-        about
+        Squares test
       </Link>
     </View>
   );
