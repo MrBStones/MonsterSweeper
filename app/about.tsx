@@ -1,18 +1,11 @@
 import Square, { SquareProps } from "@/components/square";
-import { Monster } from "@/types/monsterTypes";
+import { MonsterLevel1 } from "@/constants/monsters";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-
-const PlaceholderImage = require("@/assets/images/react-logo.png");
 
 type Tile = Omit<SquareProps, "onPress">;
 
 export default function SquareTestScreen() {
-  const monster: Monster = {
-    value: 1,
-    imgSource: PlaceholderImage,
-  };
-
   const gridX = 3;
   const gridY = 3;
   const sqSize = 64;
@@ -23,12 +16,89 @@ export default function SquareTestScreen() {
     {
       isRevealed: false,
       flag: 0,
-      monster,
-      value: 0,
+      monster: MonsterLevel1,
+      value: 2,
       hideMonster: false,
     },
     {
       isRevealed: true,
+      flag: 0,
+      monster: undefined,
+      value: 3,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
+      flag: 0,
+      monster: undefined,
+      value: 1,
+      hideMonster: false,
+    },
+    {
+      isRevealed: true,
+      flag: 0,
+      monster: MonsterLevel1,
+      value: 3,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
+      flag: 0,
+      monster: MonsterLevel1,
+      value: 3,
+      hideMonster: false,
+    },
+    {
+      isRevealed: true,
+      flag: 0,
+      monster: undefined,
+      value: 2,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
+      flag: 0,
+      monster: undefined,
+      value: 3,
+      hideMonster: false,
+    },
+    {
+      isRevealed: true,
+      flag: 0,
+      monster: MonsterLevel1,
+      value: 2,
+      hideMonster: false,
+    },
+    {
+      isRevealed: true,
+      flag: 0,
+      monster: undefined,
+      value: 2,
+      hideMonster: false,
+    },
+    {
+      isRevealed: true,
+      flag: 0,
+      monster: undefined,
+      value: 1,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
+      flag: 0,
+      monster: undefined,
+      value: 1,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
+      flag: 0,
+      monster: undefined,
+      value: 1,
+      hideMonster: false,
+    },
+    {
+      isRevealed: false,
       flag: 0,
       monster: undefined,
       value: 0,
@@ -36,27 +106,6 @@ export default function SquareTestScreen() {
     },
     {
       isRevealed: false,
-      flag: 1,
-      monster: undefined,
-      value: 0,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 123,
-      monster,
-      value: 10,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster,
-      value: 0,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
       flag: 0,
       monster: undefined,
       value: 0,
@@ -64,40 +113,30 @@ export default function SquareTestScreen() {
     },
     {
       isRevealed: false,
-      flag: 1,
+      flag: 0,
       monster: undefined,
       value: 0,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 123,
-      monster,
-      value: 10,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 123,
-      monster: undefined,
-      value: 10,
       hideMonster: false,
     },
   ]);
 
   const handleTilePress = (index: number) => {
     setTiles((currentTiles) =>
-      currentTiles.map((tile, tileIndex) =>
-        tileIndex === index
-          ? tile.isRevealed
-            ? tile.monster
-              ? tile.hideMonster
-                ? { ...tile, hideMonster: false }
-                : { ...tile, hideMonster: true }
-              : tile
-            : { ...tile, isRevealed: true }
-          : tile,
-      ),
+      currentTiles.map((tile, tileIndex) => {
+        if (tileIndex !== index) {
+          return tile;
+        }
+
+        if (!tile.isRevealed) {
+          return { ...tile, isRevealed: true };
+        }
+
+        if (tile.monster) {
+          return { ...tile, hideMonster: !tile.hideMonster };
+        }
+
+        return tile;
+      }),
     );
   };
 

@@ -1,4 +1,4 @@
-import { Monster } from "@/types/monsterTypes";
+import { Monster } from "@/types/monsterType";
 import { Image, Pressable, StyleSheet, Text } from "react-native";
 
 export type SquareProps = {
