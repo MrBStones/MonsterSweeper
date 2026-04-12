@@ -1,3 +1,4 @@
+import BottomNumberRow from "@/components/bottom-number-row";
 import PinchZoom from "@/components/pinch-zoom";
 import Square, { Tile } from "@/components/square";
 import { useState } from "react";
@@ -48,6 +49,9 @@ export default function SquareTestScreen() {
     );
   };
 
+  const [selectedNumber, setSelectedNumber] = useState(0);
+  const maxNumber = 9;
+
   return (
     <View style={styles.container}>
       <PinchZoom style={styles.zoomArea}>
@@ -69,6 +73,11 @@ export default function SquareTestScreen() {
           ))}
         </View>
       </PinchZoom>
+      <BottomNumberRow
+        selectedNumber={selectedNumber}
+        setSelectedNumber={setSelectedNumber}
+        maxNumber={maxNumber}
+      />
     </View>
   );
 }
