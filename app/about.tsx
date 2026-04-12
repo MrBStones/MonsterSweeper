@@ -1,172 +1,91 @@
-import Square, { SquareProps } from "@/components/square";
-import { MonsterLevel1 } from "@/constants/monsters";
+import PinchZoom from "@/components/pinch-zoom";
+import Square, { Tile } from "@/components/square";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-type Tile = Omit<SquareProps, "onPress">;
+const createTiles = (gridX: number, gridY: number): Tile[][] =>
+  Array.from({ length: gridY }, () =>
+    Array.from({ length: gridX }, () => ({
+      isRevealed: false,
+      flag: 0,
+      value: 0,
+      hideMonster: false,
+      monster: undefined,
+    })),
+  );
 
 export default function SquareTestScreen() {
-  const gridX = 3;
-  const gridY = 3;
+  const gridX = 10;
+  const gridY = 6;
   const sqSize = 64;
 
   const containerWidth = sqSize * gridX;
 
-  const [tiles, setTiles] = useState<Tile[]>([
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: MonsterLevel1,
-      value: 2,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: undefined,
-      value: 3,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 1,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: MonsterLevel1,
-      value: 3,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: MonsterLevel1,
-      value: 3,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: undefined,
-      value: 2,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 3,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: MonsterLevel1,
-      value: 2,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: undefined,
-      value: 2,
-      hideMonster: false,
-    },
-    {
-      isRevealed: true,
-      flag: 0,
-      monster: undefined,
-      value: 1,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 1,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 1,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 0,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 0,
-      hideMonster: false,
-    },
-    {
-      isRevealed: false,
-      flag: 0,
-      monster: undefined,
-      value: 0,
-      hideMonster: false,
-    },
-  ]);
+  const [tiles, setTiles] = useState<Tile[][]>(() => createTiles(gridX, gridY));
 
-  const handleTilePress = (index: number) => {
+  const handleTilePress = (rowIndex: number, columnIndex: number) => {
     setTiles((currentTiles) =>
-      currentTiles.map((tile, tileIndex) => {
-        if (tileIndex !== index) {
+      currentTiles.map((row, currentRowIndex) =>
+        row.map((tile, currentColumnIndex) => {
+          if (
+            currentRowIndex !== rowIndex ||
+            currentColumnIndex !== columnIndex
+          ) {
+            return tile;
+          }
+
+          if (!tile.isRevealed) {
+            return { ...tile, isRevealed: true };
+          }
+
+          if (tile.monster) {
+            return { ...tile, hideMonster: !tile.hideMonster };
+          }
+
           return tile;
-        }
-
-        if (!tile.isRevealed) {
-          return { ...tile, isRevealed: true };
-        }
-
-        if (tile.monster) {
-          return { ...tile, hideMonster: !tile.hideMonster };
-        }
-
-        return tile;
-      }),
+        }),
+      ),
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={[styles.squareContainer, { width: containerWidth }]}>
-        {tiles.map((tile, index) => (
-          <Square
-            key={index}
-            isRevealed={tile.isRevealed}
-            flag={tile.flag}
-            monster={tile.monster}
-            value={tile.value}
-            onPress={() => handleTilePress(index)}
-            hideMonster={tile.hideMonster}
-          />
-        ))}
-      </View>
+      <PinchZoom style={styles.zoomArea}>
+        <View style={[styles.board, { width: containerWidth }]}>
+          {tiles.map((row, rowIndex) => (
+            <View key={rowIndex} style={styles.row}>
+              {row.map((tile, columnIndex) => (
+                <Square
+                  key={`${rowIndex}-${columnIndex}`}
+                  isRevealed={tile.isRevealed}
+                  flag={tile.flag}
+                  monster={tile.monster}
+                  value={tile.value}
+                  onPress={() => handleTilePress(rowIndex, columnIndex)}
+                  hideMonster={tile.hideMonster}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      </PinchZoom>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  squareContainer: {
+  board: {
+    alignItems: "stretch",
+  },
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
   },
   container: {
     flex: 1,
     backgroundColor: "#25292e",
+  },
+  zoomArea: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },

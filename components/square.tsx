@@ -1,12 +1,15 @@
 import { Monster } from "@/types/monsterType";
 import { Image, Pressable, StyleSheet, Text } from "react-native";
 
-export type SquareProps = {
+export type Tile = {
   isRevealed: boolean;
   flag: number;
   value: number;
   hideMonster: boolean;
   monster: Monster | undefined;
+};
+
+type SquareProps = Tile & {
   onPress?: () => void;
 };
 
