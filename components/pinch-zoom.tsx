@@ -26,6 +26,11 @@ type Point = {
   y: number;
 };
 
+type Size = {
+  width: number;
+  height: number;
+};
+
 type TouchPoint = {
   pageX: number;
   pageY: number;
@@ -39,7 +44,8 @@ export default function PinchZoom({
   maxScale = 4,
   initialScale = 1,
 }: PinchZoomProps) {
-  const layout = useRef({ width: 0, height: 0 });
+  const layout = useRef<Size>({ width: 0, height: 0 });
+  const contentLayout = useRef<Size>({ width: 0, height: 0 });
   const gestureMode = useRef<"idle" | "pan" | "pinch">("idle");
   const startScale = useRef(initialScale);
   const currentScale = useRef(initialScale);
@@ -58,6 +64,11 @@ export default function PinchZoom({
     layout.current = { width, height };
   };
 
+  const handleContentLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    contentLayout.current = { width, height };
+  };
+
   const getCenter = (touches: TouchPoint[]): Point => ({
     x: (touches[0].pageX + touches[1].pageX) / 2,
     y: (touches[0].pageY + touches[1].pageY) / 2,
@@ -74,11 +85,63 @@ export default function PinchZoom({
     y: touch.pageY,
   });
 
+  const getClampedTranslation = (
+    nextScale: number,
+    nextX: number,
+    nextY: number,
+  ) => {
+    const viewport = layout.current;
+    const content = contentLayout.current;
+    const edgePadding = 16;
+
+    if (
+      viewport.width === 0 ||
+      viewport.height === 0 ||
+      content.width === 0 ||
+      content.height === 0
+    ) {
+      return { x: nextX, y: nextY };
+    }
+
+    const scaledWidth = content.width * nextScale;
+    const scaledHeight = content.height * nextScale;
+    const centeredX = (viewport.width - scaledWidth) / 2;
+    const centeredY = (viewport.height - scaledHeight) / 2;
+
+    const clampAxis = (
+      centeredOffset: number,
+      scaledSize: number,
+      viewportSize: number,
+      nextValue: number,
+    ) => {
+      if (scaledSize <= viewportSize - edgePadding * 2) {
+        return 0;
+      }
+
+      const minValue = Math.min(
+        viewportSize - edgePadding - centeredOffset - scaledSize,
+        edgePadding - centeredOffset,
+      );
+      const maxValue = Math.max(
+        viewportSize - edgePadding - centeredOffset - scaledSize,
+        edgePadding - centeredOffset,
+      );
+
+      return clamp(nextValue, minValue, maxValue);
+    };
+
+    return {
+      x: clampAxis(centeredX, scaledWidth, viewport.width, nextX),
+      y: clampAxis(centeredY, scaledHeight, viewport.height, nextY),
+    };
+  };
+
   const applyTransform = (nextX: number, nextY: number, nextScale: number) => {
-    currentTranslate.current = { x: nextX, y: nextY };
+    const clampedTranslate = getClampedTranslation(nextScale, nextX, nextY);
+    currentTranslate.current = clampedTranslate;
     currentScale.current = nextScale;
-    translateX.setValue(nextX);
-    translateY.setValue(nextY);
+    translateX.setValue(clampedTranslate.x);
+    translateY.setValue(clampedTranslate.y);
     scale.setValue(nextScale);
   };
 
@@ -91,12 +154,12 @@ export default function PinchZoom({
       event.nativeEvent.touches.length === 2,
     onMoveShouldSetPanResponderCapture: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
-      Math.abs(gestureState.dx) > 4 ||
-      Math.abs(gestureState.dy) > 4,
+      (currentScale.current > minScale + 0.0001 &&
+        (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
     onMoveShouldSetPanResponder: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
-      Math.abs(gestureState.dx) > 4 ||
-      Math.abs(gestureState.dy) > 4,
+      (currentScale.current > minScale + 0.0001 &&
+        (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
     onPanResponderGrant: (event) => {
       const touches = event.nativeEvent.touches;
 
@@ -127,6 +190,13 @@ export default function PinchZoom({
         }
 
         if (layout.current.width === 0 || layout.current.height === 0) {
+          return;
+        }
+
+        if (
+          contentLayout.current.width === 0 ||
+          contentLayout.current.height === 0
+        ) {
           return;
         }
 
@@ -163,6 +233,10 @@ export default function PinchZoom({
         return;
       }
 
+      if (currentScale.current <= minScale + 0.0001) {
+        return;
+      }
+
       const activeTouch = touches[0];
 
       applyTransform(
@@ -184,6 +258,7 @@ export default function PinchZoom({
     <View onLayout={handleLayout} style={[styles.container, style]}>
       <Animated.View
         {...responder.panHandlers}
+        onLayout={handleContentLayout}
         style={[styles.content, contentStyle, animatedStyle]}
       >
         {children}
@@ -198,7 +273,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   content: {
-    flexGrow: 1,
     alignSelf: "center",
+    flexShrink: 0,
   },
 });
