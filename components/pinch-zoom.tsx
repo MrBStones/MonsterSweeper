@@ -85,6 +85,25 @@ export default function PinchZoom({
     y: touch.pageY,
   });
 
+  const canPanAtScale = (nextScale: number) => {
+    const viewport = layout.current;
+    const content = contentLayout.current;
+
+    if (
+      viewport.width === 0 ||
+      viewport.height === 0 ||
+      content.width === 0 ||
+      content.height === 0
+    ) {
+      return true;
+    }
+
+    const scaledWidth = content.width * nextScale;
+    const scaledHeight = content.height * nextScale;
+
+    return scaledWidth > viewport.width || scaledHeight > viewport.height;
+  };
+
   const getClampedTranslation = (
     nextScale: number,
     nextX: number,
@@ -114,7 +133,7 @@ export default function PinchZoom({
       viewportSize: number,
       nextValue: number,
     ) => {
-      if (scaledSize <= viewportSize - edgePadding * 2) {
+      if (scaledSize <= viewportSize) {
         return 0;
       }
 
@@ -154,11 +173,11 @@ export default function PinchZoom({
       event.nativeEvent.touches.length === 2,
     onMoveShouldSetPanResponderCapture: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
-      (currentScale.current > minScale + 0.0001 &&
+      (canPanAtScale(currentScale.current) &&
         (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
     onMoveShouldSetPanResponder: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
-      (currentScale.current > minScale + 0.0001 &&
+      (canPanAtScale(currentScale.current) &&
         (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
     onPanResponderGrant: (event) => {
       const touches = event.nativeEvent.touches;
@@ -233,7 +252,7 @@ export default function PinchZoom({
         return;
       }
 
-      if (currentScale.current <= minScale + 0.0001) {
+      if (!canPanAtScale(currentScale.current)) {
         return;
       }
 

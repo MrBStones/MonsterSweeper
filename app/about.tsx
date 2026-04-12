@@ -17,7 +17,7 @@ const createTiles = (gridX: number, gridY: number): Tile[][] =>
 
 export default function SquareTestScreen() {
   const gridX = 10;
-  const gridY = 6;
+  const gridY = 10;
   const sqSize = 64;
 
   const containerWidth = sqSize * gridX;
