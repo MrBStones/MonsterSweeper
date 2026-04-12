@@ -31,7 +31,11 @@ export default function BottomNumberRow({
             return (
               <Pressable
                 key={number}
-                onPress={() => setSelectedNumber(number)}
+                onPress={() =>
+                  number == selectedNumber
+                    ? setSelectedNumber(0)
+                    : setSelectedNumber(number)
+                }
                 style={({ pressed }) => [
                   styles.button,
                   { flex: 1 },
