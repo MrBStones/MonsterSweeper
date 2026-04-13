@@ -3,60 +3,42 @@ import PinchZoom from "@/components/pinch-zoom";
 import Square from "@/components/square";
 import { StandardGameMode } from "@/game-logic/game-logic";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
-import { Tile } from "@/types/gameModeTypes";
-import { useState } from "react";
+import { InintalizationProps } from "@/types/gameModeTypes";
+import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-const createTiles = (gridX: number, gridY: number): Tile[][] =>
-  Array.from({ length: gridY }, () =>
-    Array.from({ length: gridX }, () => ({
-      revealed: false,
-      flag: 0,
-      value: 0,
-      hideMonster: false,
-      monster: undefined,
-    })),
-  );
-
 export default function SquareTestScreen() {
-  const gridX = 10;
-  const gridY = 10;
+  const gridX = 25;
+  const gridY = 60;
   const sqSize = 64;
 
   const containerWidth = sqSize * gridX;
-  const gameLogic: GameModeInterface = new StandardGameMode(undefined, {
+  const HUGEProps: InintalizationProps = {
+    sizeX: 25,
+    sizeY: 50,
+    initialHP: 30,
+    initialTap: { x: 0, y: 0 },
+    monsters: [0, 52, 46, 40, 36, 30, 24, 18, 13, 1],
+  };
+  const SMALLProps: InintalizationProps = {
     sizeX: 10,
     sizeY: 10,
     initialHP: 30,
     initialTap: { x: 0, y: 0 },
     monsters: [0, 3, 3, 3, 3, 1],
-  });
+  };
+  const gameLogicRef = useRef<GameModeInterface | null>(null);
 
-  const [tiles, setTiles] = useState<Tile[][]>(() => gameLogic.gameState.tiles);
+  if (!gameLogicRef.current) {
+    gameLogicRef.current = new StandardGameMode(undefined, HUGEProps);
+  }
+
+  const gameLogic = gameLogicRef.current;
+  const [, forceRender] = useState(0);
 
   const handleTilePress = (rowIndex: number, columnIndex: number) => {
-    setTiles((currentTiles) =>
-      currentTiles.map((row, currentRowIndex) =>
-        row.map((tile, currentColumnIndex) => {
-          if (
-            currentRowIndex !== rowIndex ||
-            currentColumnIndex !== columnIndex
-          ) {
-            return tile;
-          }
-
-          if (!tile.revealed) {
-            return { ...tile, revealed: true };
-          }
-
-          if (tile.monster) {
-            return { ...tile, hideMonster: !tile.hideMonster };
-          }
-
-          return tile;
-        }),
-      ),
-    );
+    gameLogic.onPress(columnIndex, rowIndex);
+    forceRender((value) => value + 1);
   };
 
   const [selectedNumber, setSelectedNumber] = useState(0);
@@ -66,7 +48,7 @@ export default function SquareTestScreen() {
     <View style={styles.container}>
       <PinchZoom style={styles.zoomArea}>
         <View style={[styles.board, { width: containerWidth }]}>
-          {tiles.map((row, rowIndex) => (
+          {gameLogic.gameState.tiles.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.row}>
               {row.map((tile, columnIndex) => (
                 <Square

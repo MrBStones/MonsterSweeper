@@ -1,11 +1,12 @@
 import { Tile } from "@/types/gameModeTypes";
+import { memo } from "react";
 import { Image, Pressable, StyleSheet, Text } from "react-native";
 
 type SquareProps = Tile & {
   onPress?: () => void;
 };
 
-export default function Square({
+function Square({
   revealed,
   flag,
   value,
@@ -46,6 +47,16 @@ export default function Square({
     </Pressable>
   );
 }
+
+export default memo(
+  Square,
+  (previousProps, nextProps) =>
+    previousProps.revealed === nextProps.revealed &&
+    previousProps.flag === nextProps.flag &&
+    previousProps.value === nextProps.value &&
+    previousProps.hideMonster === nextProps.hideMonster &&
+    previousProps.monster === nextProps.monster,
+);
 
 const styles = StyleSheet.create({
   container: {

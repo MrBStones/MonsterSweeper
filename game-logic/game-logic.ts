@@ -27,7 +27,28 @@ export class StandardGameMode implements GameModeInterface {
   }
 
   onPress(x: number, y: number): void {
-    throw new Error("Method not implemented.");
+    const currentTile = this.gameState.tiles[y]?.[x];
+
+    if (!currentTile) {
+      return;
+    }
+
+    const nextTile = !currentTile.revealed
+      ? { ...currentTile, revealed: true }
+      : currentTile.monster
+        ? { ...currentTile, hideMonster: !currentTile.hideMonster }
+        : currentTile;
+
+    if (nextTile === currentTile) {
+      return;
+    }
+
+    const nextTiles = [...this.gameState.tiles];
+    const nextRow = [...nextTiles[y]];
+
+    nextRow[x] = nextTile;
+    nextTiles[y] = nextRow;
+    this.gameState.tiles = nextTiles;
   }
 
   initLevel({
@@ -67,7 +88,6 @@ export class StandardGameMode implements GameModeInterface {
   }
 
   populateLevel(tiles: Tile[][], monsters: number[], initialTap?: Vector2) {
-    const totalTiles = tiles.length * tiles[0].length;
     let monsterCount: number = monsters.reduce((sum, count) => sum + count, 0);
     let emptyTiles: Vector2[] = [];
 
@@ -86,8 +106,11 @@ export class StandardGameMode implements GameModeInterface {
       );
     }
 
-    // shuffle empty tiles
-    emptyTiles.sort(() => Math.random() - 0.5);
+    // shuffle empty tiles in place
+    for (let i = emptyTiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [emptyTiles[i], emptyTiles[j]] = [emptyTiles[j], emptyTiles[i]];
+    }
 
     // place monsters
     let emptyTileIndex = 0;
@@ -120,7 +143,5 @@ export class StandardGameMode implements GameModeInterface {
         }
       }
     }
-
-    // happy :)
   }
 }
