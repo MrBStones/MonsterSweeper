@@ -1,13 +1,16 @@
 import BottomNumberRow from "@/components/bottom-number-row";
 import PinchZoom from "@/components/pinch-zoom";
-import Square, { Tile } from "@/components/square";
+import Square from "@/components/square";
+import { StandardGameMode } from "@/game-logic/game-logic";
+import { GameModeInterface } from "@/interfaces/gameModeInterface";
+import { Tile } from "@/types/gameModeTypes";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 const createTiles = (gridX: number, gridY: number): Tile[][] =>
   Array.from({ length: gridY }, () =>
     Array.from({ length: gridX }, () => ({
-      isRevealed: false,
+      revealed: false,
       flag: 0,
       value: 0,
       hideMonster: false,
@@ -21,8 +24,15 @@ export default function SquareTestScreen() {
   const sqSize = 64;
 
   const containerWidth = sqSize * gridX;
+  const gameLogic: GameModeInterface = new StandardGameMode(undefined, {
+    sizeX: 10,
+    sizeY: 10,
+    initialHP: 30,
+    initialTap: { x: 0, y: 0 },
+    monsters: [0, 3, 3, 3, 3, 1],
+  });
 
-  const [tiles, setTiles] = useState<Tile[][]>(() => createTiles(gridX, gridY));
+  const [tiles, setTiles] = useState<Tile[][]>(() => gameLogic.gameState.tiles);
 
   const handleTilePress = (rowIndex: number, columnIndex: number) => {
     setTiles((currentTiles) =>
@@ -35,8 +45,8 @@ export default function SquareTestScreen() {
             return tile;
           }
 
-          if (!tile.isRevealed) {
-            return { ...tile, isRevealed: true };
+          if (!tile.revealed) {
+            return { ...tile, revealed: true };
           }
 
           if (tile.monster) {
@@ -61,7 +71,7 @@ export default function SquareTestScreen() {
               {row.map((tile, columnIndex) => (
                 <Square
                   key={`${rowIndex}-${columnIndex}`}
-                  isRevealed={tile.isRevealed}
+                  revealed={tile.revealed}
                   flag={tile.flag}
                   monster={tile.monster}
                   value={tile.value}
@@ -76,7 +86,7 @@ export default function SquareTestScreen() {
       <BottomNumberRow
         selectedNumber={selectedNumber}
         setSelectedNumber={setSelectedNumber}
-        maxNumber={maxNumber}
+        maxNumber={gameLogic.gameState.maxMonsterLevel}
       />
     </View>
   );

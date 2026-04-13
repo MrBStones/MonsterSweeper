@@ -1,20 +1,12 @@
-import { Monster } from "@/types/monsterType";
+import { Tile } from "@/types/gameModeTypes";
 import { Image, Pressable, StyleSheet, Text } from "react-native";
-
-export type Tile = {
-  isRevealed: boolean;
-  flag: number;
-  value: number;
-  hideMonster: boolean;
-  monster: Monster | undefined;
-};
 
 type SquareProps = Tile & {
   onPress?: () => void;
 };
 
 export default function Square({
-  isRevealed,
+  revealed,
   flag,
   value,
   hideMonster = false,
@@ -23,7 +15,7 @@ export default function Square({
 }: SquareProps) {
   let text: string = "";
 
-  if (isRevealed) {
+  if (revealed) {
     text = value <= 0 && !hideMonster ? "" : value + "";
   } else {
     text = flag <= 0 ? "" : flag + "";
@@ -34,16 +26,16 @@ export default function Square({
       onPress={onPress}
       style={[
         styles.container,
-        isRevealed ? styles.revealed : styles.notRevealed,
+        revealed ? styles.revealed : styles.notRevealed,
       ]}
     >
-      {isRevealed && monster !== undefined && !hideMonster ? (
+      {revealed && monster !== undefined && !hideMonster ? (
         <Image source={monster.imgSource} style={styles.monsterImage} />
       ) : (
         <Text
           selectable={false}
           style={
-            isRevealed && hideMonster && monster !== undefined
+            revealed && hideMonster && monster !== undefined
               ? styles.numMonsterHidden
               : styles.num
           }

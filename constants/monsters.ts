@@ -44,3 +44,16 @@ export const MonsterLevel9: Monster = {
   value: 9,
   imgSource: require("@/assets/images/icon.png"),
 };
+
+export const MonstersArray: Monster[] = [
+  { value: 0, imgSource: require("@/assets/images/icon.png") },
+  MonsterLevel1,
+  MonsterLevel2,
+  MonsterLevel3,
+  MonsterLevel4,
+  MonsterLevel5,
+  MonsterLevel6,
+  MonsterLevel7,
+  MonsterLevel8,
+  MonsterLevel9,
+];
