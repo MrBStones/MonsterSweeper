@@ -1,10 +1,10 @@
+import BoardRow from "@/components/board-row";
 import BottomNumberRow from "@/components/bottom-number-row";
 import PinchZoom from "@/components/pinch-zoom";
-import Square from "@/components/square";
 import { StandardGameMode } from "@/game-logic/game-logic";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
 import { InintalizationProps } from "@/types/gameModeTypes";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function SquareTestScreen() {
@@ -36,10 +36,13 @@ export default function SquareTestScreen() {
   const gameLogic = gameLogicRef.current;
   const [, forceRender] = useState(0);
 
-  const handleTilePress = (rowIndex: number, columnIndex: number) => {
-    gameLogic.onPress(columnIndex, rowIndex);
-    forceRender((value) => value + 1);
-  };
+  const handleTilePress = useCallback(
+    (rowIndex: number, columnIndex: number) => {
+      gameLogic.onPress(columnIndex, rowIndex);
+      forceRender((value) => value + 1);
+    },
+    [gameLogic],
+  );
 
   const [selectedNumber, setSelectedNumber] = useState(0);
   const maxNumber = 9;
@@ -49,19 +52,12 @@ export default function SquareTestScreen() {
       <PinchZoom style={styles.zoomArea}>
         <View style={[styles.board, { width: containerWidth }]}>
           {gameLogic.gameState.tiles.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.row}>
-              {row.map((tile, columnIndex) => (
-                <Square
-                  key={`${rowIndex}-${columnIndex}`}
-                  revealed={tile.revealed}
-                  flag={tile.flag}
-                  monster={tile.monster}
-                  value={tile.value}
-                  onPress={() => handleTilePress(rowIndex, columnIndex)}
-                  hideMonster={tile.hideMonster}
-                />
-              ))}
-            </View>
+            <BoardRow
+              key={rowIndex}
+              row={row}
+              rowIndex={rowIndex}
+              onTilePress={handleTilePress}
+            />
           ))}
         </View>
       </PinchZoom>
@@ -77,9 +73,6 @@ export default function SquareTestScreen() {
 const styles = StyleSheet.create({
   board: {
     alignItems: "stretch",
-  },
-  row: {
-    flexDirection: "row",
   },
   container: {
     flex: 1,
