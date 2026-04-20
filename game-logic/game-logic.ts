@@ -1,10 +1,10 @@
 import { MonstersArray } from "@/constants/monsters";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
 import {
-    GameState,
-    InintalizationProps,
-    Tile,
-    Vector2,
+  GameState,
+  InintalizationProps,
+  Tile,
+  Vector2,
 } from "@/types/gameModeTypes";
 
 export class StandardGameMode implements GameModeInterface {
@@ -33,21 +33,83 @@ export class StandardGameMode implements GameModeInterface {
       return;
     }
 
-    const nextTile = !currentTile.revealed
-      ? { ...currentTile, revealed: true }
-      : currentTile.monster
-        ? { ...currentTile, hideMonster: !currentTile.hideMonster }
-        : currentTile;
+    if (!currentTile.revealed) {
+      this.revealTile(x, y);
+      return;
+    } else if (currentTile.monster) {
+      const nextTile = {
+        ...currentTile,
+        hideMonster: !currentTile.hideMonster,
+      };
+      const nextTiles = [...this.gameState.tiles];
+      const nextRow = [...nextTiles[y]];
 
-    if (nextTile === currentTile) {
+      nextRow[x] = nextTile;
+      nextTiles[y] = nextRow;
+      this.gameState.tiles = nextTiles;
+    }
+  }
+
+  revealTile(x: number, y: number): void {
+    const currentTile = this.gameState.tiles[y]?.[x];
+
+    if (!currentTile || currentTile.revealed) {
       return;
     }
 
-    const nextTiles = [...this.gameState.tiles];
-    const nextRow = [...nextTiles[y]];
+    if (currentTile.monster) {
+      this.gameState.tiles = this.gameState.tiles.map((row) => [...row]);
+      this.gameState.tiles[y][x].revealed = true;
+      return;
+    }
 
-    nextRow[x] = nextTile;
-    nextTiles[y] = nextRow;
+    const nextTiles = this.gameState.tiles.map((row) => [...row]);
+    const queue: Vector2[] = [{ x, y }];
+    const visited = new Set<string>();
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const key = `${current.x},${current.y}`;
+
+      if (visited.has(key)) {
+        continue;
+      }
+
+      visited.add(key);
+
+      const tile = nextTiles[current.y]?.[current.x];
+
+      if (!tile || tile.revealed || tile.monster) {
+        continue;
+      }
+
+      tile.revealed = true;
+
+      if (tile.value !== 0) {
+        continue;
+      }
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) {
+            continue;
+          }
+
+          const nextX = current.x + dx;
+          const nextY = current.y + dy;
+
+          if (
+            nextY >= 0 &&
+            nextY < nextTiles.length &&
+            nextX >= 0 &&
+            nextX < nextTiles[nextY].length
+          ) {
+            queue.push({ x: nextX, y: nextY });
+          }
+        }
+      }
+    }
+
     this.gameState.tiles = nextTiles;
   }
 
