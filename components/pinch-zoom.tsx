@@ -41,7 +41,7 @@ export default function PinchZoom({
   style,
   contentStyle,
   minScale = 0.5,
-  maxScale = 4,
+  maxScale = 2,
   initialScale = 1,
 }: PinchZoomProps) {
   const layout = useRef<Size>({ width: 0, height: 0 });

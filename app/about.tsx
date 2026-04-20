@@ -8,11 +8,10 @@ import { useCallback, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function SquareTestScreen() {
-  const gridX = 25;
-  const gridY = 60;
+  const gridW = 25;
   const sqSize = 64;
 
-  const containerWidth = sqSize * gridX;
+  const containerWidth = sqSize * gridW;
   const HUGEProps: InintalizationProps = {
     sizeX: 25,
     sizeY: 50,
