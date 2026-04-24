@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: "#2a2a2a",
   },
   zoomArea: {
     flex: 1,

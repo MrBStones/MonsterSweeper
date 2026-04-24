@@ -1,6 +1,6 @@
 import { Tile } from "@/types/gameModeTypes";
 import { memo } from "react";
-import { Image, Pressable, StyleSheet, Text } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 type SquareProps = Tile & {
   onPress?: () => void;
@@ -23,27 +23,28 @@ function Square({
   }
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.container,
-        revealed ? styles.revealed : styles.notRevealed,
-      ]}
-    >
-      {revealed && monster !== undefined && !hideMonster ? (
-        <Image source={monster.imgSource} style={styles.monsterImage} />
-      ) : (
-        <Text
-          selectable={false}
-          style={
-            revealed && hideMonster && monster !== undefined
-              ? styles.numMonsterHidden
-              : styles.num
-          }
-        >
-          {text}
-        </Text>
-      )}
+    <Pressable onPress={onPress}>
+      <View
+        style={[
+          styles.container,
+          revealed ? styles.revealed : styles.notRevealed,
+        ]}
+      >
+        {revealed && monster !== undefined && !hideMonster ? (
+          <Image source={monster.imgSource} style={styles.monsterImage} />
+        ) : (
+          <Text
+            selectable={false}
+            style={
+              revealed && hideMonster && monster !== undefined
+                ? styles.numMonsterHidden
+                : styles.num
+            }
+          >
+            {text}
+          </Text>
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -60,17 +61,24 @@ export default memo(
 
 const styles = StyleSheet.create({
   container: {
-    width: 64,
-    height: 64,
-    borderWidth: 5,
-    borderColor: "#fff",
+    width: 60,
+    height: 60,
+
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 5,
+    margin: 2,
   },
   revealed: {
-    backgroundColor: "#000",
+    backgroundColor: "#0e0e0e",
   },
-  notRevealed: { backgroundColor: "#464646" },
+  notRevealed: {
+    borderColor: "#292929",
+    borderWidth: 1,
+    backgroundColor: "#393939",
+    boxShadow:
+      "0px 3px 5px rgba(0,0,0,0.6), inset 0px 2px 3px rgba(255,255,255,0.1)",
+  },
   num: {
     color: "#fff",
     fontWeight: "bold",
