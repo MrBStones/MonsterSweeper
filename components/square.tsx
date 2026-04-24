@@ -73,12 +73,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#0e0e0e",
   },
   notRevealed: {
+    borderColor: "#505050",
+    borderWidth: 1,
+    backgroundColor: "#393939",
+  },
+  /* notRevealed: {
     borderColor: "#292929",
     borderWidth: 1,
     backgroundColor: "#393939",
-    boxShadow:
-      "0px 3px 5px rgba(0,0,0,0.6), inset 0px 2px 3px rgba(255,255,255,0.1)",
-  },
+    boxShadow: "0px 3px 5px rgba(0,0,0,0.6)",
+  }, */
   num: {
     color: "#fff",
     fontWeight: "bold",
