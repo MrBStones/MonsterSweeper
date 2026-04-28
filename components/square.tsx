@@ -3,18 +3,22 @@ import { memo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 type SquareProps = Tile & {
-  onPress?: () => void;
+  rowIndex: number;
+  columnIndex: number;
+  onTilePress?: (x: number, y: number) => void;
 };
 
 function Square({
+  rowIndex,
+  columnIndex,
+  onTilePress,
   revealed,
   flag,
   value,
   hideMonster = false,
   monster,
-  onPress,
 }: SquareProps) {
-  let text: string = "";
+  let text = "";
 
   if (revealed) {
     text = value <= 0 && !hideMonster ? "" : value + "";
@@ -23,7 +27,7 @@ function Square({
   }
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={() => onTilePress?.(columnIndex, rowIndex)}>
       <View
         style={[
           styles.container,
@@ -52,6 +56,9 @@ function Square({
 export default memo(
   Square,
   (previousProps, nextProps) =>
+    previousProps.rowIndex === nextProps.rowIndex &&
+    previousProps.columnIndex === nextProps.columnIndex &&
+    previousProps.onTilePress === nextProps.onTilePress &&
     previousProps.revealed === nextProps.revealed &&
     previousProps.flag === nextProps.flag &&
     previousProps.value === nextProps.value &&
@@ -63,7 +70,6 @@ const styles = StyleSheet.create({
   container: {
     width: 60,
     height: 60,
-
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 5,
@@ -77,12 +83,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#393939",
   },
-  /* notRevealed: {
-    borderColor: "#292929",
-    borderWidth: 1,
-    backgroundColor: "#393939",
-    boxShadow: "0px 3px 5px rgba(0,0,0,0.6)",
-  }, */
   num: {
     color: "#fff",
     fontWeight: "bold",

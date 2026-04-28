@@ -6,7 +6,7 @@ import { View } from "react-native";
 type BoardRowProps = {
   row: Tile[];
   rowIndex: number;
-  onTilePress: (rowIndex: number, columnIndex: number) => void;
+  onTilePress: (x: number, y: number) => void;
 };
 
 function BoardRow({ row, rowIndex, onTilePress }: BoardRowProps) {
@@ -15,11 +15,13 @@ function BoardRow({ row, rowIndex, onTilePress }: BoardRowProps) {
       {row.map((tile, columnIndex) => (
         <Square
           key={`${rowIndex}-${columnIndex}`}
+          rowIndex={rowIndex}
+          columnIndex={columnIndex}
+          onTilePress={onTilePress}
           revealed={tile.revealed}
           flag={tile.flag}
           monster={tile.monster}
           value={tile.value}
-          onPress={() => onTilePress(rowIndex, columnIndex)}
           hideMonster={tile.hideMonster}
         />
       ))}

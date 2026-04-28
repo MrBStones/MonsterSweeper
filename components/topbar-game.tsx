@@ -4,6 +4,8 @@ import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useGameStore } from "@/store/gameStore";
+
 type StatBarProps = {
   currentValue: number;
   maxValue: number;
@@ -50,22 +52,17 @@ function StatBar({
   );
 }
 
-type TopbarGameProps = {
-  playerHP: number;
-  playerMaxHP: number;
-  playerXP: number;
-  playerLevel: number;
-  nextXP: number[];
-};
-
-export default function TopbarGame({
-  playerHP,
-  playerMaxHP,
-  playerXP,
-  playerLevel,
-  nextXP,
-}: TopbarGameProps) {
+export default function TopbarGame() {
   const { top } = useSafeAreaInsets();
+  const playerHP = useGameStore((state) => state.gameState?.playerHP ?? 0);
+  const playerMaxHP = useGameStore(
+    (state) => state.gameState?.playerMaxHP ?? 0,
+  );
+  const playerXP = useGameStore((state) => state.gameState?.playerXP ?? 0);
+  const playerLevel = useGameStore(
+    (state) => state.gameState?.playerLevel ?? 1,
+  );
+  const nextXP = useGameStore((state) => state.gameState?.nextXP ?? [0, 0]);
   const nextLevelXP = nextXP[playerLevel + 1];
   const xpIntoLevel = playerXP;
   const xpNeededForLevel = nextLevelXP;

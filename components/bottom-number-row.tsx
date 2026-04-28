@@ -1,19 +1,16 @@
-import { Dispatch, SetStateAction } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useGameStore } from "@/store/gameStore";
+
 type BottomNumberRowProps = {
-  selectedNumber: number;
-  setSelectedNumber: Dispatch<SetStateAction<number>>;
   maxNumber: number;
 };
 
-export default function BottomNumberRow({
-  selectedNumber,
-  setSelectedNumber,
-  maxNumber,
-}: BottomNumberRowProps) {
+export default function BottomNumberRow({ maxNumber }: BottomNumberRowProps) {
   const { bottom } = useSafeAreaInsets();
+  const selectedNumber = useGameStore((state) => state.selectedNumber);
+  const setSelectedNumber = useGameStore((state) => state.setSelectedNumber);
   const numbers = Array.from(
     { length: Math.max(0, maxNumber) },
     (_, index) => index + 1,

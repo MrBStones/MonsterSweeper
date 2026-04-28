@@ -3,10 +3,9 @@ import BottomNumberRow from "@/components/bottom-number-row";
 import MeasureHeight from "@/components/measure-height";
 import PinchZoom from "@/components/pinch-zoom";
 import TopbarGame from "@/components/topbar-game";
-import { StandardGameMode } from "@/game-logic/game-logic";
-import { GameModeInterface } from "@/interfaces/gameModeInterface";
+import { useGameStore } from "@/store/gameStore";
 import { InintalizationProps } from "@/types/gameModeTypes";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function SquareTestScreen() {
@@ -21,54 +20,25 @@ export default function SquareTestScreen() {
     initialTap: { x: 0, y: 0 },
     monsters: [0, 52, 46, 40, 36, 30, 24, 18, 13, 1],
   };
-  const SMALLProps: InintalizationProps = {
-    sizeX: 10,
-    sizeY: 10,
-    initialHP: 30,
-    initialTap: { x: 0, y: 0 },
-    monsters: [0, 3, 3, 3, 3, 1],
-  };
-  const [selectedNumber, setSelectedNumber] = useState(0);
-  const [showGameOver, setShowGameOver] = useState(false);
   const [topBarHeight, setTopBarHeight] = useState(0);
-  const maxNumber = 9;
-  const gameLogicRef = useRef<GameModeInterface | null>(null);
-  const selectedNumberRef = useRef(selectedNumber);
+  const gameState = useGameStore((state) => state.gameState);
+  const showGameOver = useGameStore((state) => state.showGameOver);
+  const initGame = useGameStore((state) => state.initGame);
+  const handleTilePress = useGameStore((state) => state.handleTilePress);
 
   useEffect(() => {
-    selectedNumberRef.current = selectedNumber;
-  }, [selectedNumber]);
+    initGame(HUGEProps);
+  }, [initGame]);
 
-  if (!gameLogicRef.current) {
-    gameLogicRef.current = new StandardGameMode(undefined, HUGEProps);
+  if (!gameState) {
+    return <View style={styles.container} />;
   }
-
-  const gameLogic = gameLogicRef.current;
-  const [, forceRender] = useState(0);
-
-  const handleTilePress = useCallback(
-    (rowIndex: number, columnIndex: number) => {
-      if (showGameOver) {
-        return;
-      }
-
-      gameLogic.onPress(columnIndex, rowIndex, selectedNumberRef.current);
-      setSelectedNumber(0);
-
-      if (gameLogic.gameState.playerHP <= 0) {
-        setShowGameOver(true);
-      }
-
-      forceRender((value) => value + 1);
-    },
-    [gameLogic, showGameOver],
-  );
 
   return (
     <View style={styles.container}>
       <PinchZoom style={styles.zoomArea} paddingTopExtra={topBarHeight}>
         <View style={[styles.board, { width: containerWidth }]}>
-          {gameLogic.gameState.tiles.map((row, rowIndex) => (
+          {gameState.tiles.map((row, rowIndex) => (
             <BoardRow
               key={rowIndex}
               row={row}
@@ -80,19 +50,9 @@ export default function SquareTestScreen() {
       </PinchZoom>
 
       <MeasureHeight setHeight={setTopBarHeight} style={styles.topBarOverlay}>
-        <TopbarGame
-          playerHP={gameLogic.gameState.playerHP}
-          playerMaxHP={gameLogic.gameState.playerMaxHP}
-          playerXP={gameLogic.gameState.playerXP}
-          playerLevel={gameLogic.gameState.playerLevel}
-          nextXP={gameLogic.gameState.nextXP}
-        />
+        <TopbarGame />
       </MeasureHeight>
-      <BottomNumberRow
-        selectedNumber={selectedNumber}
-        setSelectedNumber={setSelectedNumber}
-        maxNumber={gameLogic.gameState.maxMonsterLevel}
-      />
+      <BottomNumberRow maxNumber={gameState.maxMonsterLevel} />
       <Modal transparent visible={showGameOver} animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -105,12 +65,7 @@ export default function SquareTestScreen() {
                 pressed && styles.modalButtonPressed,
               ]}
               onPress={() => {
-                setShowGameOver(false);
-                gameLogicRef.current = new StandardGameMode(
-                  undefined,
-                  HUGEProps,
-                );
-                forceRender((value) => value + 1);
+                initGame(HUGEProps);
               }}
             >
               <Text style={styles.modalButtonText}>Restart</Text>
