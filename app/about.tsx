@@ -1,6 +1,7 @@
 import BoardRow from "@/components/board-row";
 import BottomNumberRow from "@/components/bottom-number-row";
 import PinchZoom from "@/components/pinch-zoom";
+import TopbarGame from "@/components/topbar-game";
 import { StandardGameMode } from "@/game-logic/game-logic";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
 import { InintalizationProps } from "@/types/gameModeTypes";
@@ -65,6 +66,10 @@ export default function SquareTestScreen() {
           ))}
         </View>
       </PinchZoom>
+
+      <View style={styles.topBarOverlay}>
+        <TopbarGame />
+      </View>
       <BottomNumberRow
         selectedNumber={selectedNumber}
         setSelectedNumber={setSelectedNumber}
@@ -89,5 +94,13 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#fff",
+  },
+  topBarOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    elevation: 10,
   },
 });

@@ -21,7 +21,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="about"
-            options={{ title: "Test", gestureEnabled: false }}
+            options={{ headerShown: false, gestureEnabled: false }}
           />
         </Stack>
       </GestureHandlerRootView>
