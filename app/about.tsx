@@ -4,7 +4,7 @@ import PinchZoom from "@/components/pinch-zoom";
 import { StandardGameMode } from "@/game-logic/game-logic";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
 import { InintalizationProps } from "@/types/gameModeTypes";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function SquareTestScreen() {
@@ -26,7 +26,14 @@ export default function SquareTestScreen() {
     initialTap: { x: 0, y: 0 },
     monsters: [0, 3, 3, 3, 3, 1],
   };
+  const [selectedNumber, setSelectedNumber] = useState(0);
+  const maxNumber = 9;
   const gameLogicRef = useRef<GameModeInterface | null>(null);
+  const selectedNumberRef = useRef(selectedNumber);
+
+  useEffect(() => {
+    selectedNumberRef.current = selectedNumber;
+  }, [selectedNumber]);
 
   if (!gameLogicRef.current) {
     gameLogicRef.current = new StandardGameMode(undefined, HUGEProps);
@@ -37,14 +44,12 @@ export default function SquareTestScreen() {
 
   const handleTilePress = useCallback(
     (rowIndex: number, columnIndex: number) => {
-      gameLogic.onPress(columnIndex, rowIndex);
+      gameLogic.onPress(columnIndex, rowIndex, selectedNumberRef.current);
+      setSelectedNumber(0);
       forceRender((value) => value + 1);
     },
     [gameLogic],
   );
-
-  const [selectedNumber, setSelectedNumber] = useState(0);
-  const maxNumber = 9;
 
   return (
     <View style={styles.container}>

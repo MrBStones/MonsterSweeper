@@ -26,7 +26,7 @@ export class StandardGameMode implements GameModeInterface {
     this.initLevel(initializationProps);
   }
 
-  onPress(x: number, y: number): void {
+  onPress(x: number, y: number, flag: number): void {
     const currentTile = this.gameState.tiles[y]?.[x];
 
     if (!currentTile) {
@@ -34,9 +34,24 @@ export class StandardGameMode implements GameModeInterface {
     }
 
     if (!currentTile.revealed) {
-      this.revealTile(x, y);
+      if (flag > 0) {
+        const nextTile = {
+          ...currentTile,
+          flag: currentTile.flag === flag ? 0 : flag,
+        };
+        const nextTiles = [...this.gameState.tiles];
+        const nextRow = [...nextTiles[y]];
+
+        nextRow[x] = nextTile;
+        nextTiles[y] = nextRow;
+        this.gameState.tiles = nextTiles;
+      } else {
+        this.revealTile(x, y);
+      }
       return;
-    } else if (currentTile.monster) {
+    }
+
+    if (currentTile.monster) {
       const nextTile = {
         ...currentTile,
         hideMonster: !currentTile.hideMonster,
@@ -53,7 +68,11 @@ export class StandardGameMode implements GameModeInterface {
   revealTile(x: number, y: number): void {
     const currentTile = this.gameState.tiles[y]?.[x];
 
-    if (!currentTile || currentTile.revealed) {
+    if (
+      !currentTile ||
+      currentTile.revealed ||
+      currentTile.flag > this.gameState.playerLevel
+    ) {
       return;
     }
 
