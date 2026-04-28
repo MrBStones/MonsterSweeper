@@ -41,7 +41,9 @@ function StatBar({
               styles.barInner,
               { width: `${progress}%`, backgroundColor: color },
             ]}
-          />
+          >
+            <View style={styles.borderOnly}></View>
+          </View>
         </View>
       </View>
     </View>
@@ -73,34 +75,43 @@ export default function TopbarGame({
       <Pressable style={styles.topBarButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={24} color="white" />
       </Pressable>
-      <StatBar
-        currentValue={playerHP}
-        maxValue={playerMaxHP}
-        suffix="HP"
-        color="#00e24b"
-      >
-        <Ionicons name="heart" size={24} color="white" />
-      </StatBar>
+      <View style={styles.statsBarContainer}>
+        <StatBar
+          currentValue={playerHP}
+          maxValue={playerMaxHP}
+          suffix="HP"
+          color="#00e24b"
+        >
+          <Ionicons name="heart" size={24} color="white" />
+        </StatBar>
 
-      <StatBar
-        currentValue={xpIntoLevel}
-        maxValue={xpNeededForLevel}
-        suffix="XP"
-        color="#4ea1ff"
-      >
-        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>
-          Lvl {playerLevel}
-        </Text>
-      </StatBar>
+        <StatBar
+          currentValue={xpIntoLevel}
+          maxValue={xpNeededForLevel}
+          suffix="XP"
+          color="#4ea1ff"
+        >
+          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>
+            Lvl {playerLevel}
+          </Text>
+        </StatBar>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  statsBarContainer: {
+    flexWrap: "wrap",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    flex: 1,
+    gap: 10,
+  },
   topBar: {
     padding: 5,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
   },
@@ -144,14 +155,10 @@ const styles = StyleSheet.create({
   },
   barOuter: {
     height: 30,
-    minWidth: 120,
+    width: 120,
     backgroundColor: "black",
     borderEndEndRadius: 10,
     borderTopEndRadius: 10,
-    borderColor: "#3c4148",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderEndWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: {
@@ -161,7 +168,7 @@ const styles = StyleSheet.create({
   },
   barInner: {
     backgroundColor: "#00e24b",
-    height: 28,
+    height: "100%",
     borderEndWidth: 1,
     borderEndColor: "#ffffff63",
   },
@@ -189,5 +196,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 12,
     elevation: 6,
+  },
+  borderOnly: {
+    height: 30,
+    width: 120,
+    borderEndEndRadius: 10,
+    borderTopEndRadius: 10,
+    borderColor: "#3c4148",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderEndWidth: 1,
+    outlineWidth: 2,
+    outlineColor: "#3c4148",
   },
 });

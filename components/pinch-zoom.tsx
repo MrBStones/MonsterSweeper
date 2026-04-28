@@ -16,6 +16,8 @@ type PinchZoomProps = {
   minScale?: number;
   maxScale?: number;
   initialScale?: number;
+  padding?: number;
+  paddingTopExtra?: number;
 };
 
 const clamp = (value: number, lowerBound: number, upperBound: number) =>
@@ -43,6 +45,8 @@ export default function PinchZoom({
   minScale = 0.5,
   maxScale = 2,
   initialScale = 1,
+  padding = 16,
+  paddingTopExtra = 0,
 }: PinchZoomProps) {
   const layout = useRef<Size>({ width: 0, height: 0 });
   const contentLayout = useRef<Size>({ width: 0, height: 0 });
@@ -151,8 +155,22 @@ export default function PinchZoom({
     };
 
     return {
-      x: clampAxis(centeredX, scaledWidth, viewport.width, nextX, 16, 16),
-      y: clampAxis(centeredY, scaledHeight, viewport.height, nextY, 16, 140),
+      x: clampAxis(
+        centeredX,
+        scaledWidth,
+        viewport.width,
+        nextX,
+        padding,
+        padding,
+      ),
+      y: clampAxis(
+        centeredY,
+        scaledHeight,
+        viewport.height,
+        nextY,
+        padding,
+        padding + paddingTopExtra,
+      ),
     };
   };
 
