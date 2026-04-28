@@ -5,27 +5,55 @@ import PinchZoom from "@/components/pinch-zoom";
 import TopbarGame from "@/components/topbar-game";
 import { useGameStore } from "@/store/gameStore";
 import { InintalizationProps } from "@/types/gameModeTypes";
-import { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import * as NavigationBar from "expo-navigation-bar";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+const HUGEProps: InintalizationProps = {
+  sizeX: 25,
+  sizeY: 50,
+  initialHP: 30,
+  initialTap: { x: 0, y: 0 },
+  monsters: [0, 52, 46, 40, 36, 30, 24, 18, 13, 1],
+};
 
 export default function SquareTestScreen() {
   const gridW = 25;
   const sqSize = 64;
 
   const containerWidth = sqSize * gridW;
-  const HUGEProps: InintalizationProps = {
-    sizeX: 25,
-    sizeY: 50,
-    initialHP: 30,
-    initialTap: { x: 0, y: 0 },
-    monsters: [0, 52, 46, 40, 36, 30, 24, 18, 13, 1],
-  };
   const [topBarHeight, setTopBarHeight] = useState(0);
   const gameState = useGameStore((state) => state.gameState);
   const showGameOver = useGameStore((state) => state.showGameOver);
   const initGame = useGameStore((state) => state.initGame);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") {
+        return;
+      }
+
+      void NavigationBar.setBehaviorAsync("overlay-swipe");
+      void NavigationBar.setVisibilityAsync("hidden");
+      StatusBar.setHidden(true, "fade");
+
+      return () => {
+        void NavigationBar.setVisibilityAsync("visible");
+        StatusBar.setHidden(false, "fade");
+      };
+    }, []),
+  );
 
   useEffect(() => {
     initGame(HUGEProps);
