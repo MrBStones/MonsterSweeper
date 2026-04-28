@@ -38,6 +38,8 @@ type TouchPoint = {
   pageY: number;
 };
 
+const PAN_ACTIVATION_SLOP = 10;
+
 export default function PinchZoom({
   children,
   style,
@@ -193,11 +195,13 @@ export default function PinchZoom({
     onMoveShouldSetPanResponderCapture: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
       (canPanAtScale(currentScale.current) &&
-        (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
+        (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
+          Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
     onMoveShouldSetPanResponder: (event, gestureState) =>
       event.nativeEvent.touches.length >= 2 ||
       (canPanAtScale(currentScale.current) &&
-        (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4)),
+        (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
+          Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
     onPanResponderGrant: (event) => {
       const touches = event.nativeEvent.touches;
 
