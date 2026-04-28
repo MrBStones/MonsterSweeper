@@ -68,7 +68,13 @@ export default function SquareTestScreen() {
       </PinchZoom>
 
       <View style={styles.topBarOverlay}>
-        <TopbarGame />
+        <TopbarGame
+          playerHP={gameLogic.gameState.playerHP}
+          playerMaxHP={gameLogic.gameState.playerMaxHP}
+          playerXP={gameLogic.gameState.playerXP}
+          playerLevel={gameLogic.gameState.playerLevel}
+          nextXP={gameLogic.gameState.nextXP}
+        />
       </View>
       <BottomNumberRow
         selectedNumber={selectedNumber}

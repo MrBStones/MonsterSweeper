@@ -12,6 +12,7 @@ export type GameState = {
   playerXP: number;
   nextXP: number[];
   playerHP: number;
+  playerMaxHP: number;
 };
 
 export type Tile = {

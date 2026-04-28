@@ -10,6 +10,7 @@ type StatBarProps = {
   suffix: string;
   color: string;
   children: ReactNode;
+  showValues?: boolean;
 };
 
 function StatBar({
@@ -18,6 +19,7 @@ function StatBar({
   suffix,
   color,
   children,
+  showValues = true,
 }: StatBarProps) {
   const progress =
     maxValue > 0
@@ -28,9 +30,11 @@ function StatBar({
     <View style={styles.bar}>
       <View style={[styles.barLeft]}>{children}</View>
       <View>
-        <Text style={styles.barText}>
-          {currentValue}/{maxValue} {suffix}
-        </Text>
+        {showValues ? (
+          <Text style={styles.barText}>
+            {currentValue}/{maxValue} {suffix}
+          </Text>
+        ) : null}
         <View style={styles.barOuter}>
           <View
             style={[
@@ -44,21 +48,48 @@ function StatBar({
   );
 }
 
-export default function TopbarGame() {
+type TopbarGameProps = {
+  playerHP: number;
+  playerMaxHP: number;
+  playerXP: number;
+  playerLevel: number;
+  nextXP: number[];
+};
+
+export default function TopbarGame({
+  playerHP,
+  playerMaxHP,
+  playerXP,
+  playerLevel,
+  nextXP,
+}: TopbarGameProps) {
   const { top } = useSafeAreaInsets();
+  const nextLevelXP = nextXP[playerLevel + 1];
+  const xpIntoLevel = playerXP;
+  const xpNeededForLevel = nextLevelXP;
 
   return (
     <View style={[styles.topBar, { paddingTop: 10 + top }]}>
       <Pressable style={styles.topBarButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={24} color="white" />
       </Pressable>
-      <StatBar currentValue={50} maxValue={70} suffix="HP" color="#00e24b">
+      <StatBar
+        currentValue={playerHP}
+        maxValue={playerMaxHP}
+        suffix="HP"
+        color="#00e24b"
+      >
         <Ionicons name="heart" size={24} color="white" />
       </StatBar>
 
-      <StatBar currentValue={10} maxValue={48} suffix="XP" color="#4ea1ff">
+      <StatBar
+        currentValue={xpIntoLevel}
+        maxValue={xpNeededForLevel}
+        suffix="XP"
+        color="#4ea1ff"
+      >
         <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>
-          Lvl 7
+          Lvl {playerLevel}
         </Text>
       </StatBar>
     </View>
@@ -113,7 +144,7 @@ const styles = StyleSheet.create({
   },
   barOuter: {
     height: 30,
-    minWidth: 100,
+    minWidth: 120,
     backgroundColor: "black",
     borderEndEndRadius: 10,
     borderTopEndRadius: 10,

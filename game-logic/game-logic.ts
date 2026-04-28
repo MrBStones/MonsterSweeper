@@ -79,6 +79,17 @@ export class StandardGameMode implements GameModeInterface {
     if (currentTile.monster) {
       this.gameState.tiles = this.gameState.tiles.map((row) => [...row]);
       this.gameState.tiles[y][x].revealed = true;
+
+      const monsterLevel = currentTile.monster.value;
+      if (monsterLevel > this.gameState.playerLevel) {
+        this.gameState.playerHP -= this.calculateDamage(
+          monsterLevel,
+          this.gameState.playerLevel,
+        );
+      }
+      this.gameState.playerXP += this.calculateXP(monsterLevel);
+      this.gameState.playerLevel = this.calculateCurrentLevel();
+      this.gameState.monstersRevealed[monsterLevel] += 1;
       return;
     }
 
@@ -157,14 +168,15 @@ export class StandardGameMode implements GameModeInterface {
     this.gameState = {
       gridSizeX: sizeX,
       gridSizeY: sizeY,
-      tiles,
-      monstersRevealed: [],
+      tiles: tiles,
+      monstersRevealed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // index 0 is unused, monster levels start at 1
       totalMonsters: monsters,
       maxMonsterLevel: monsters.length - 1,
       playerLevel: 1,
       playerXP: 0,
-      nextXP: [],
+      nextXP: this.calculateDynamicXPNeeded(monsters),
       playerHP: initialHP,
+      playerMaxHP: initialHP,
     };
   }
 
@@ -224,5 +236,66 @@ export class StandardGameMode implements GameModeInterface {
         }
       }
     }
+  }
+
+  calculateDynamicXPNeeded(monsters: number[]): number[] {
+    // Index 0 is a placeholder, Index 1 (Level 1) requires 0 XP to reach
+    const xpNeeded: number[] = [0, 0];
+    let cumulativeXP = 0;
+
+    // These ratios represent the exact percentage of total available XP
+    // the original HUGE mode forces you to get before leveling up early on.
+    // Using percentages ensures the curve scales perfectly if you change monster counts!
+    const earlyPacingRatios = {
+      2: 10 / 52, // ~19.2% of Level 1 XP
+      3: 90 / 144, // 62.5% of Level 1-2 XP
+      4: 202 / 304, // ~66.4% of Level 1-3 XP
+      5: 400 / 592, // ~67.5% of Level 1-4 XP
+    };
+
+    for (
+      let currentLevel = 1;
+      currentLevel < monsters.length - 1;
+      currentLevel++
+    ) {
+      // Add the maximum possible XP for the current monster tier
+      cumulativeXP += monsters[currentLevel] * this.calculateXP(currentLevel);
+      const nextLevel = currentLevel + 1;
+
+      if (nextLevel >= 6) {
+        // THE BOTTLENECK: For level 6+, you must clear 100% of all lower-level monsters.
+        xpNeeded.push(cumulativeXP);
+      } else {
+        // THE SLACK: Apply the pacing ratio to dynamically generate early game milestones.
+        // We use Math.round() to keep the numbers clean integers.
+        const ratio =
+          earlyPacingRatios[nextLevel as keyof typeof earlyPacingRatios];
+        xpNeeded.push(Math.round(cumulativeXP * ratio));
+      }
+    }
+
+    return xpNeeded;
+  }
+
+  calculateXP(monsterLevel: number): number {
+    if (monsterLevel <= 0) return 0;
+    return Math.pow(2, monsterLevel - 1);
+  }
+
+  calculateDamage(monsterLevel: number, playerLevel: number): number {
+    if (monsterLevel <= playerLevel) return 0;
+    return (monsterLevel - playerLevel) * monsterLevel;
+  }
+
+  calculateCurrentLevel(): number {
+    let level = 1;
+    for (let i = 1; i < this.gameState.nextXP.length; i++) {
+      if (this.gameState.playerXP >= this.gameState.nextXP[i]) {
+        level = i;
+      } else {
+        break;
+      }
+    }
+    return level;
   }
 }
