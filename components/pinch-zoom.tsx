@@ -132,26 +132,28 @@ export default function PinchZoom({
       scaledSize: number,
       viewportSize: number,
       nextValue: number,
+      edgePaddingStart: number,
+      edgePaddingEnd: number,
     ) => {
       if (scaledSize <= viewportSize) {
         return 0;
       }
 
       const minValue = Math.min(
-        viewportSize - edgePadding - centeredOffset - scaledSize,
-        edgePadding - centeredOffset,
+        viewportSize - edgePaddingStart - centeredOffset - scaledSize,
+        edgePaddingStart - centeredOffset,
       );
       const maxValue = Math.max(
-        viewportSize - edgePadding - centeredOffset - scaledSize,
-        edgePadding - centeredOffset,
+        viewportSize - edgePaddingEnd - centeredOffset - scaledSize,
+        edgePaddingEnd - centeredOffset,
       );
 
       return clamp(nextValue, minValue, maxValue);
     };
 
     return {
-      x: clampAxis(centeredX, scaledWidth, viewport.width, nextX),
-      y: clampAxis(centeredY, scaledHeight, viewport.height, nextY),
+      x: clampAxis(centeredX, scaledWidth, viewport.width, nextX, 16, 16),
+      y: clampAxis(centeredY, scaledHeight, viewport.height, nextY, 16, 140),
     };
   };
 
