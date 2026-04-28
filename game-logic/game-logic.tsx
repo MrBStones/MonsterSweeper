@@ -35,14 +35,13 @@ export class StandardGameMode implements GameModeInterface {
 
     if (!currentTile.revealed) {
       if (flag > 0) {
-        const nextTile = {
-          ...currentTile,
-          flag: currentTile.flag === flag ? 0 : flag,
-        };
         const nextTiles = [...this.gameState.tiles];
         const nextRow = [...nextTiles[y]];
 
-        nextRow[x] = nextTile;
+        nextRow[x] = {
+          ...currentTile,
+          flag: currentTile.flag === flag ? 0 : flag,
+        };
         nextTiles[y] = nextRow;
         this.gameState.tiles = nextTiles;
       } else {
@@ -52,14 +51,13 @@ export class StandardGameMode implements GameModeInterface {
     }
 
     if (currentTile.monster) {
-      const nextTile = {
-        ...currentTile,
-        hideMonster: !currentTile.hideMonster,
-      };
       const nextTiles = [...this.gameState.tiles];
       const nextRow = [...nextTiles[y]];
 
-      nextRow[x] = nextTile;
+      nextRow[x] = {
+        ...currentTile,
+        hideMonster: !currentTile.hideMonster,
+      };
       nextTiles[y] = nextRow;
       this.gameState.tiles = nextTiles;
     }
@@ -77,8 +75,14 @@ export class StandardGameMode implements GameModeInterface {
     }
 
     if (currentTile.monster) {
-      this.gameState.tiles = this.gameState.tiles.map((row) => [...row]);
-      this.gameState.tiles[y][x].revealed = true;
+      const nextTiles = [...this.gameState.tiles];
+      const nextRow = [...nextTiles[y]];
+      nextRow[x] = {
+        ...currentTile,
+        revealed: true,
+      };
+      nextTiles[y] = nextRow;
+      this.gameState.tiles = nextTiles;
 
       const monsterLevel = currentTile.monster.value;
       if (monsterLevel > this.gameState.playerLevel) {
@@ -93,19 +97,26 @@ export class StandardGameMode implements GameModeInterface {
       return;
     }
 
-    const nextTiles = this.gameState.tiles.map((row) => [...row]);
+    const nextTiles = [...this.gameState.tiles];
+    const width = nextTiles[0]?.length ?? 0;
     const queue: Vector2[] = [{ x, y }];
-    const visited = new Set<string>();
+    const visited = new Uint8Array(width * nextTiles.length);
+    const clonedRows = new Set<number>();
+    visited[y * width + x] = 1;
 
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      const key = `${current.x},${current.y}`;
-
-      if (visited.has(key)) {
-        continue;
+    const getMutableRow = (rowIndex: number) => {
+      if (!clonedRows.has(rowIndex)) {
+        nextTiles[rowIndex] = [...nextTiles[rowIndex]];
+        clonedRows.add(rowIndex);
       }
 
-      visited.add(key);
+      return nextTiles[rowIndex];
+    };
+
+    let queueIndex = 0;
+
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex++];
 
       const tile = nextTiles[current.y]?.[current.x];
 
@@ -113,7 +124,11 @@ export class StandardGameMode implements GameModeInterface {
         continue;
       }
 
-      tile.revealed = true;
+      const mutableRow = getMutableRow(current.y);
+      mutableRow[current.x] = {
+        ...tile,
+        revealed: true,
+      };
 
       if (tile.value !== 0) {
         continue;
@@ -134,7 +149,12 @@ export class StandardGameMode implements GameModeInterface {
             nextX >= 0 &&
             nextX < nextTiles[nextY].length
           ) {
-            queue.push({ x: nextX, y: nextY });
+            const nextIndex = nextY * width + nextX;
+
+            if (!visited[nextIndex]) {
+              visited[nextIndex] = 1;
+              queue.push({ x: nextX, y: nextY });
+            }
           }
         }
       }
