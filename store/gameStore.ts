@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import { create } from "zustand";
 
 import { StandardGameMode } from "@/game-logic/game-logic";
@@ -81,6 +82,10 @@ function createBlankGameState(props: InintalizationProps): GameState {
   };
 }
 
+function triggerRevealHaptic() {
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   gameState: null,
   selectedNumber: 0,
@@ -115,6 +120,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    const currentTile = gameState.tiles[y]?.[x];
+    const shouldTriggerRevealHaptic =
+      currentTile !== undefined && !currentTile.revealed && selectedNumber === 0;
+
     if (!boardGenerated) {
       const gameLogic = new StandardGameMode(undefined, {
         ...initializationProps,
@@ -130,6 +139,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         boardGenerated: true,
       });
 
+      if (shouldTriggerRevealHaptic) {
+        triggerRevealHaptic();
+      }
+
       return;
     }
 
@@ -142,5 +155,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showGameOver: gameLogic.gameState.playerHP <= 0,
       boardGenerated: true,
     });
+
+    if (shouldTriggerRevealHaptic) {
+      triggerRevealHaptic();
+    }
   },
 }));
