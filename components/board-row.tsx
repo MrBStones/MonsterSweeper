@@ -6,15 +6,21 @@ import { View } from "react-native";
 type BoardRowProps = {
   row: Tile[];
   rowIndex: number;
+  gameSessionId: number;
   onTilePress: (x: number, y: number) => void;
 };
 
-function BoardRow({ row, rowIndex, onTilePress }: BoardRowProps) {
+function BoardRow({
+  row,
+  rowIndex,
+  gameSessionId,
+  onTilePress,
+}: BoardRowProps) {
   return (
     <View style={styles.row}>
       {row.map((tile, columnIndex) => (
         <Square
-          key={`${rowIndex}-${columnIndex}`}
+          key={`${gameSessionId}-${rowIndex}-${columnIndex}`}
           rowIndex={rowIndex}
           columnIndex={columnIndex}
           onTilePress={onTilePress}

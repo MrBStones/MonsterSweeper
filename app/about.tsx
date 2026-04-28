@@ -25,6 +25,7 @@ export default function SquareTestScreen() {
   const showGameOver = useGameStore((state) => state.showGameOver);
   const initGame = useGameStore((state) => state.initGame);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
 
   useEffect(() => {
     initGame(HUGEProps);
@@ -40,9 +41,10 @@ export default function SquareTestScreen() {
         <View style={[styles.board, { width: containerWidth }]}>
           {gameState.tiles.map((row, rowIndex) => (
             <BoardRow
-              key={rowIndex}
+              key={`${gameSessionId}-${rowIndex}`}
               row={row}
               rowIndex={rowIndex}
+              gameSessionId={gameSessionId}
               onTilePress={handleTilePress}
             />
           ))}

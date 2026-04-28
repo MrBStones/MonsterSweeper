@@ -1,6 +1,13 @@
 import { Tile } from "@/types/gameModeTypes";
-import { memo } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { memo, useEffect, useRef } from "react";
+import {
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+} from "react-native";
 
 type SquareProps = Tile & {
   rowIndex: number;
@@ -18,6 +25,22 @@ function Square({
   hideMonster = false,
   monster,
 }: SquareProps) {
+  const revealAnim = useRef(new Animated.Value(revealed ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (revealed) {
+      Animated.timing(revealAnim, {
+        toValue: 1,
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    revealAnim.setValue(0);
+  }, [revealed, revealAnim]);
+
   let text = "";
 
   if (revealed) {
@@ -28,10 +51,21 @@ function Square({
 
   return (
     <Pressable onPress={() => onTilePress?.(columnIndex, rowIndex)}>
-      <View
+      <Animated.View
         style={[
           styles.container,
           revealed ? styles.revealed : styles.notRevealed,
+          revealed && {
+            opacity: revealAnim,
+            transform: [
+              {
+                scale: revealAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.88, 1],
+                }),
+              },
+            ],
+          },
         ]}
       >
         {revealed && monster !== undefined && !hideMonster ? (
@@ -48,7 +82,7 @@ function Square({
             {text}
           </Text>
         )}
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }

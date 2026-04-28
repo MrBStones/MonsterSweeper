@@ -9,6 +9,7 @@ type GameStore = {
   showGameOver: boolean;
   initializationProps: InintalizationProps | null;
   boardGenerated: boolean;
+  gameSessionId: number;
   initGame: (props: InintalizationProps) => void;
   setSelectedNumber: (num: number) => void;
   handleTilePress: (x: number, y: number) => void;
@@ -86,6 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showGameOver: false,
   initializationProps: null,
   boardGenerated: false,
+  gameSessionId: 0,
 
   initGame: (props) => {
     set({
@@ -94,6 +96,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showGameOver: false,
       initializationProps: props,
       boardGenerated: false,
+      gameSessionId: get().gameSessionId + 1,
     });
   },
 
