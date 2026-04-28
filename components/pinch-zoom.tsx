@@ -111,7 +111,6 @@ export default function PinchZoom({
   ) => {
     const viewport = layout.current;
     const content = contentLayout.current;
-    const edgePadding = 150;
 
     if (
       viewport.width === 0 ||
