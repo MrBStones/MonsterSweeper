@@ -46,7 +46,8 @@ export default function SquareTestScreen() {
 
   const containerWidth = sqSize * gridW;
   const [topBarHeight, setTopBarHeight] = useState(0);
-  const [holdPickerState, setHoldPickerState] = useState<HoldPickerState | null>(null);
+  const [holdPickerState, setHoldPickerState] =
+    useState<HoldPickerState | null>(null);
   const gameState = useGameStore((state) => state.gameState);
   const showGameOver = useGameStore((state) => state.showGameOver);
   const initGame = useGameStore((state) => state.initGame);

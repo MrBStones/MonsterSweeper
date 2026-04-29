@@ -15,7 +15,12 @@ type SquareProps = Tile & {
   columnIndex: number;
   onTilePress?: (x: number, y: number) => void;
   onTileLongPressStart?: (x: number, y: number) => void;
-  onTileLongPressMove?: (x: number, y: number, localX: number, localY: number) => void;
+  onTileLongPressMove?: (
+    x: number,
+    y: number,
+    localX: number,
+    localY: number,
+  ) => void;
   onTileLongPressEnd?: (x: number, y: number) => void;
 };
 
@@ -78,7 +83,7 @@ function Square({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
         isDragging.current = false;
-        
+
         if (longPressTimer.current) {
           clearTimeout(longPressTimer.current);
         }
@@ -90,7 +95,10 @@ function Square({
       },
       onPanResponderMove: (e, gestureState) => {
         if (!isDragging.current) {
-          if (Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10) {
+          if (
+            Math.abs(gestureState.dx) > 10 ||
+            Math.abs(gestureState.dy) > 10
+          ) {
             if (longPressTimer.current) clearTimeout(longPressTimer.current);
           }
         } else {
@@ -109,14 +117,17 @@ function Square({
           callbacks.current.onTileLongPressEnd?.(columnIndex, rowIndex);
           isDragging.current = false;
         } else {
-          if (Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
+          if (
+            Math.abs(gestureState.dx) < 10 &&
+            Math.abs(gestureState.dy) < 10
+          ) {
             callbacks.current.onTilePress?.(columnIndex, rowIndex);
           }
         }
       },
       onPanResponderTerminate: () => {
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
-        
+
         if (isDragging.current) {
           callbacks.current.onTileLongPressEnd?.(columnIndex, rowIndex);
           isDragging.current = false;
@@ -127,38 +138,38 @@ function Square({
 
   return (
     <View style={styles.touchTarget} {...panResponder.panHandlers}>
-        <Animated.View
-          style={[
-            styles.container,
-            revealed ? styles.revealed : styles.notRevealed,
-            revealed && {
-              opacity: revealAnim,
-              transform: [
-                {
-                  scale: revealAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.88, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {revealed && monster !== undefined && !hideMonster ? (
-            <Image source={monster.imgSource} style={styles.monsterImage} />
-          ) : (
-            <Text
-              selectable={false}
-              style={
-                revealed && hideMonster && monster !== undefined
-                  ? styles.numMonsterHidden
-                  : styles.num
-              }
-            >
-              {text}
-            </Text>
-          )}
-        </Animated.View>
+      <Animated.View
+        style={[
+          styles.container,
+          revealed ? styles.revealed : styles.notRevealed,
+          revealed && {
+            opacity: revealAnim,
+            transform: [
+              {
+                scale: revealAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.88, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        {revealed && monster !== undefined && !hideMonster ? (
+          <Image source={monster.imgSource} style={styles.monsterImage} />
+        ) : (
+          <Text
+            selectable={false}
+            style={
+              revealed && hideMonster && monster !== undefined
+                ? styles.numMonsterHidden
+                : styles.num
+            }
+          >
+            {text}
+          </Text>
+        )}
+      </Animated.View>
     </View>
   );
 }

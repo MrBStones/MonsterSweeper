@@ -9,7 +9,12 @@ type BoardRowProps = {
   gameSessionId: number;
   onTilePress: (x: number, y: number) => void;
   onTileLongPressStart: (x: number, y: number) => void;
-  onTileLongPressMove: (x: number, y: number, localX: number, localY: number) => void;
+  onTileLongPressMove: (
+    x: number,
+    y: number,
+    localX: number,
+    localY: number,
+  ) => void;
   onTileLongPressEnd: (x: number, y: number) => void;
 };
 
