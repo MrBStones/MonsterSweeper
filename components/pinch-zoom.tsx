@@ -1,4 +1,4 @@
-import { ReactNode, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import {
   Animated,
   LayoutChangeEvent,
@@ -60,6 +60,7 @@ export default function PinchZoom({
   const startCenter = useRef<Point>({ x: 0, y: 0 });
   const startDistance = useRef(0);
   const startTouch = useRef<Point>({ x: 0, y: 0 });
+  const inertiaFrame = useRef<number | null>(null);
 
   const scale = useRef(new Animated.Value(initialScale)).current;
   const translateX = useRef(new Animated.Value(0)).current;
@@ -189,6 +190,79 @@ export default function PinchZoom({
     gestureMode.current = "idle";
   };
 
+  const stopInertia = () => {
+    if (inertiaFrame.current !== null) {
+      cancelAnimationFrame(inertiaFrame.current);
+      inertiaFrame.current = null;
+    }
+  };
+
+  const startInertia = (velocityX: number, velocityY: number) => {
+    if (!canPanAtScale(currentScale.current)) {
+      return;
+    }
+
+    stopInertia();
+
+    const frictionPerFrame = 0.85;
+    const minimumVelocity = 0.08;
+    let currentVelocityX = velocityX;
+    let currentVelocityY = velocityY;
+    let previousFrameTime = 0;
+
+    const step = (frameTime: number) => {
+      if (previousFrameTime === 0) {
+        previousFrameTime = frameTime;
+        inertiaFrame.current = requestAnimationFrame(step);
+        return;
+      }
+
+      const deltaTime = frameTime - previousFrameTime;
+      previousFrameTime = frameTime;
+
+      const nextTranslateX =
+        currentTranslate.current.x + currentVelocityX * deltaTime;
+      const nextTranslateY =
+        currentTranslate.current.y + currentVelocityY * deltaTime;
+
+      const clampedTranslate = getClampedTranslation(
+        currentScale.current,
+        nextTranslateX,
+        nextTranslateY,
+      );
+
+      currentTranslate.current = clampedTranslate;
+      translateX.setValue(clampedTranslate.x);
+      translateY.setValue(clampedTranslate.y);
+
+      if (clampedTranslate.x !== nextTranslateX) {
+        currentVelocityX = 0;
+      }
+
+      if (clampedTranslate.y !== nextTranslateY) {
+        currentVelocityY = 0;
+      }
+
+      const deceleration = Math.pow(frictionPerFrame, deltaTime / 16.67);
+      currentVelocityX *= deceleration;
+      currentVelocityY *= deceleration;
+
+      if (
+        Math.abs(currentVelocityX) < minimumVelocity &&
+        Math.abs(currentVelocityY) < minimumVelocity
+      ) {
+        inertiaFrame.current = null;
+        return;
+      }
+
+      inertiaFrame.current = requestAnimationFrame(step);
+    };
+
+    inertiaFrame.current = requestAnimationFrame(step);
+  };
+
+  useEffect(() => () => stopInertia(), []);
+
   const responder = PanResponder.create({
     onStartShouldSetPanResponderCapture: (event) =>
       event.nativeEvent.touches.length === 2,
@@ -203,6 +277,8 @@ export default function PinchZoom({
         (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
           Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
     onPanResponderGrant: (event) => {
+      stopInertia();
+
       const touches = event.nativeEvent.touches;
 
       if (touches.length >= 2) {
@@ -287,8 +363,22 @@ export default function PinchZoom({
         currentScale.current,
       );
     },
-    onPanResponderRelease: finishInteraction,
-    onPanResponderTerminate: finishInteraction,
+    onPanResponderRelease: (_event, gestureState) => {
+      if (
+        gestureMode.current === "pan" &&
+        canPanAtScale(currentScale.current)
+      ) {
+        startInertia(gestureState.vx, gestureState.vy);
+      } else {
+        stopInertia();
+      }
+
+      finishInteraction();
+    },
+    onPanResponderTerminate: () => {
+      stopInertia();
+      finishInteraction();
+    },
     onPanResponderTerminationRequest: () => false,
   });
 
