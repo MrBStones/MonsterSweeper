@@ -4,21 +4,28 @@ import {
   Animated,
   Easing,
   Image,
-  Pressable,
+  PanResponder,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 
 type SquareProps = Tile & {
   rowIndex: number;
   columnIndex: number;
   onTilePress?: (x: number, y: number) => void;
+  onTileLongPressStart?: (x: number, y: number) => void;
+  onTileLongPressMove?: (x: number, y: number, localX: number, localY: number) => void;
+  onTileLongPressEnd?: (x: number, y: number) => void;
 };
 
 function Square({
   rowIndex,
   columnIndex,
   onTilePress,
+  onTileLongPressStart,
+  onTileLongPressMove,
+  onTileLongPressEnd,
   revealed,
   flag,
   value,
@@ -49,41 +56,110 @@ function Square({
     text = flag <= 0 ? "" : flag + "";
   }
 
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDragging = useRef(false);
+
+  const callbacks = useRef({
+    onTilePress,
+    onTileLongPressStart,
+    onTileLongPressMove,
+    onTileLongPressEnd,
+  });
+
+  callbacks.current = {
+    onTilePress,
+    onTileLongPressStart,
+    onTileLongPressMove,
+    onTileLongPressEnd,
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        isDragging.current = false;
+        
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+        }
+
+        longPressTimer.current = setTimeout(() => {
+          isDragging.current = true;
+          callbacks.current.onTileLongPressStart?.(columnIndex, rowIndex);
+        }, 250);
+      },
+      onPanResponderMove: (e, gestureState) => {
+        if (!isDragging.current) {
+          if (Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10) {
+            if (longPressTimer.current) clearTimeout(longPressTimer.current);
+          }
+        } else {
+          callbacks.current.onTileLongPressMove?.(
+            columnIndex,
+            rowIndex,
+            e.nativeEvent.locationX,
+            e.nativeEvent.locationY,
+          );
+        }
+      },
+      onPanResponderRelease: (e, gestureState) => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+
+        if (isDragging.current) {
+          callbacks.current.onTileLongPressEnd?.(columnIndex, rowIndex);
+          isDragging.current = false;
+        } else {
+          if (Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
+            callbacks.current.onTilePress?.(columnIndex, rowIndex);
+          }
+        }
+      },
+      onPanResponderTerminate: () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        
+        if (isDragging.current) {
+          callbacks.current.onTileLongPressEnd?.(columnIndex, rowIndex);
+          isDragging.current = false;
+        }
+      },
+    }),
+  ).current;
+
   return (
-    <Pressable onPress={() => onTilePress?.(columnIndex, rowIndex)}>
-      <Animated.View
-        style={[
-          styles.container,
-          revealed ? styles.revealed : styles.notRevealed,
-          revealed && {
-            opacity: revealAnim,
-            transform: [
-              {
-                scale: revealAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.88, 1],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        {revealed && monster !== undefined && !hideMonster ? (
-          <Image source={monster.imgSource} style={styles.monsterImage} />
-        ) : (
-          <Text
-            selectable={false}
-            style={
-              revealed && hideMonster && monster !== undefined
-                ? styles.numMonsterHidden
-                : styles.num
-            }
-          >
-            {text}
-          </Text>
-        )}
-      </Animated.View>
-    </Pressable>
+    <View style={styles.touchTarget} {...panResponder.panHandlers}>
+        <Animated.View
+          style={[
+            styles.container,
+            revealed ? styles.revealed : styles.notRevealed,
+            revealed && {
+              opacity: revealAnim,
+              transform: [
+                {
+                  scale: revealAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.88, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {revealed && monster !== undefined && !hideMonster ? (
+            <Image source={monster.imgSource} style={styles.monsterImage} />
+          ) : (
+            <Text
+              selectable={false}
+              style={
+                revealed && hideMonster && monster !== undefined
+                  ? styles.numMonsterHidden
+                  : styles.num
+              }
+            >
+              {text}
+            </Text>
+          )}
+        </Animated.View>
+    </View>
   );
 }
 
@@ -93,6 +169,9 @@ export default memo(
     previousProps.rowIndex === nextProps.rowIndex &&
     previousProps.columnIndex === nextProps.columnIndex &&
     previousProps.onTilePress === nextProps.onTilePress &&
+    previousProps.onTileLongPressStart === nextProps.onTileLongPressStart &&
+    previousProps.onTileLongPressMove === nextProps.onTileLongPressMove &&
+    previousProps.onTileLongPressEnd === nextProps.onTileLongPressEnd &&
     previousProps.revealed === nextProps.revealed &&
     previousProps.flag === nextProps.flag &&
     previousProps.value === nextProps.value &&
@@ -101,13 +180,17 @@ export default memo(
 );
 
 const styles = StyleSheet.create({
+  touchTarget: {
+    width: 64,
+    height: 64,
+    padding: 2,
+  },
   container: {
-    width: 60,
-    height: 60,
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 5,
-    margin: 2,
   },
   revealed: {
     backgroundColor: "#0e0e0e",

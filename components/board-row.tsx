@@ -8,6 +8,9 @@ type BoardRowProps = {
   rowIndex: number;
   gameSessionId: number;
   onTilePress: (x: number, y: number) => void;
+  onTileLongPressStart: (x: number, y: number) => void;
+  onTileLongPressMove: (x: number, y: number, localX: number, localY: number) => void;
+  onTileLongPressEnd: (x: number, y: number) => void;
 };
 
 function BoardRow({
@@ -15,6 +18,9 @@ function BoardRow({
   rowIndex,
   gameSessionId,
   onTilePress,
+  onTileLongPressStart,
+  onTileLongPressMove,
+  onTileLongPressEnd,
 }: BoardRowProps) {
   return (
     <View style={styles.row}>
@@ -24,6 +30,9 @@ function BoardRow({
           rowIndex={rowIndex}
           columnIndex={columnIndex}
           onTilePress={onTilePress}
+          onTileLongPressStart={onTileLongPressStart}
+          onTileLongPressMove={onTileLongPressMove}
+          onTileLongPressEnd={onTileLongPressEnd}
           revealed={tile.revealed}
           flag={tile.flag}
           monster={tile.monster}
@@ -40,7 +49,10 @@ export default memo(
   (previousProps, nextProps) =>
     previousProps.row === nextProps.row &&
     previousProps.rowIndex === nextProps.rowIndex &&
-    previousProps.onTilePress === nextProps.onTilePress,
+    previousProps.onTilePress === nextProps.onTilePress &&
+    previousProps.onTileLongPressStart === nextProps.onTileLongPressStart &&
+    previousProps.onTileLongPressMove === nextProps.onTileLongPressMove &&
+    previousProps.onTileLongPressEnd === nextProps.onTileLongPressEnd,
 );
 
 const styles = {

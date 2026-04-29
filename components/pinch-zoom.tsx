@@ -18,6 +18,7 @@ type PinchZoomProps = {
   initialScale?: number;
   padding?: number;
   paddingTopExtra?: number;
+  disableSingleFingerPan?: boolean;
 };
 
 const clamp = (value: number, lowerBound: number, upperBound: number) =>
@@ -49,6 +50,7 @@ export default function PinchZoom({
   initialScale = 1,
   padding = 16,
   paddingTopExtra = 0,
+  disableSingleFingerPan = false,
 }: PinchZoomProps) {
   const layout = useRef<Size>({ width: 0, height: 0 });
   const contentLayout = useRef<Size>({ width: 0, height: 0 });
@@ -193,13 +195,15 @@ export default function PinchZoom({
     onStartShouldSetPanResponderCapture: (event) =>
       event.nativeEvent.touches.length === 2,
     onMoveShouldSetPanResponderCapture: (event, gestureState) =>
-      event.nativeEvent.touches.length >= 2 ||
-      (canPanAtScale(currentScale.current) &&
+      (!disableSingleFingerPan && event.nativeEvent.touches.length >= 2) ||
+      (!disableSingleFingerPan &&
+        canPanAtScale(currentScale.current) &&
         (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
           Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
     onMoveShouldSetPanResponder: (event, gestureState) =>
-      event.nativeEvent.touches.length >= 2 ||
-      (canPanAtScale(currentScale.current) &&
+      (!disableSingleFingerPan && event.nativeEvent.touches.length >= 2) ||
+      (!disableSingleFingerPan &&
+        canPanAtScale(currentScale.current) &&
         (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
           Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
     onPanResponderGrant: (event) => {
