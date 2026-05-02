@@ -202,56 +202,50 @@ export class StandardGameMode implements GameModeInterface {
   }
 
   populateLevel(tiles: Tile[][], monsters: number[], initialTap?: Vector2) {
-    let monsterCount: number = monsters.reduce((sum, count) => sum + count, 0);
-    let emptyTiles: Vector2[] = [];
+    const emptyTiles: Vector2[] = [];
+    const height = tiles.length;
+    if (height === 0) return;
+    const width = tiles[0].length;
 
-    for (let y = 0; y < tiles.length; y++) {
-      for (let x = 0; x < tiles[y].length; x++) {
-        emptyTiles.push({ x, y });
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (
+          !initialTap ||
+          Math.abs(x - initialTap.x) > 1 ||
+          Math.abs(y - initialTap.y) > 1
+        ) {
+          emptyTiles.push({ x, y });
+        }
       }
     }
 
-    // remove initial tap area from empty tiles
-    if (initialTap) {
-      emptyTiles = emptyTiles.filter(
-        (tile) =>
-          Math.abs(tile.x - initialTap.x) > 1 ||
-          Math.abs(tile.y - initialTap.y) > 1,
-      );
+    const totalMonsters = monsters.reduce((a, b) => a + b, 0);
+
+    // Partial Fisher-Yates shuffle: we only need to pick `totalMonsters` random tiles
+    for (let i = 0; i < totalMonsters; i++) {
+      const randIndex = i + Math.floor(Math.random() * (emptyTiles.length - i));
+      const temp = emptyTiles[i];
+      emptyTiles[i] = emptyTiles[randIndex];
+      emptyTiles[randIndex] = temp;
     }
 
-    // shuffle empty tiles in place
-    for (let i = emptyTiles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [emptyTiles[i], emptyTiles[j]] = [emptyTiles[j], emptyTiles[i]];
-    }
-
-    // place monsters
+    // Place monsters and compute surrounding values in the same pass
     let emptyTileIndex = 0;
     for (let level = monsters.length - 1; level > 0; level--) {
+      const monsterLevel = MonstersArray[level].value;
       for (let i = 0; i < monsters[level]; i++) {
-        const pos = emptyTiles[emptyTileIndex];
+        const pos = emptyTiles[emptyTileIndex++];
         tiles[pos.y][pos.x].monster = MonstersArray[level];
-        emptyTileIndex++;
-      }
-    }
 
-    // place values
-    for (let y = 0; y < tiles.length; y++) {
-      for (let x = 0; x < tiles[y].length; x++) {
-        if (tiles[y][x].monster) {
-          const monsterLevel = tiles[y][x].monster!.value;
-          for (let j = -1; j <= 1; j++) {
-            for (let i = -1; i <= 1; i++) {
-              if (
-                y + j >= 0 &&
-                y + j < tiles.length &&
-                x + i >= 0 &&
-                x + i < tiles[y].length &&
-                !(i === 0 && j === 0)
-              ) {
-                tiles[y + j][x + i].value += monsterLevel;
-              }
+        const minY = Math.max(0, pos.y - 1);
+        const maxY = Math.min(height - 1, pos.y + 1);
+        const minX = Math.max(0, pos.x - 1);
+        const maxX = Math.min(width - 1, pos.x + 1);
+
+        for (let j = minY; j <= maxY; j++) {
+          for (let k = minX; k <= maxX; k++) {
+            if (j !== pos.y || k !== pos.x) {
+              tiles[j][k].value += monsterLevel;
             }
           }
         }
