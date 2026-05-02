@@ -23,6 +23,10 @@ export default function RootLayout() {
             name="about"
             options={{ headerShown: false, gestureEnabled: false }}
           />
+          <Stack.Screen
+            name="game"
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
         </Stack>
       </GestureHandlerRootView>
     </SafeAreaProvider>

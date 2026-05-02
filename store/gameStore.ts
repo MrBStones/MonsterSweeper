@@ -2,16 +2,20 @@ import * as Haptics from "expo-haptics";
 import { create } from "zustand";
 
 import { StandardGameMode } from "@/game-logic/game-logic";
-import { GameState, InintalizationProps, Tile } from "@/types/gameModeTypes";
+import {
+    GameInitializationProps,
+    GameState,
+    Tile,
+} from "@/types/gameModeTypes";
 
 type GameStore = {
   gameState: GameState | null;
   selectedNumber: number;
   showGameOver: boolean;
-  initializationProps: InintalizationProps | null;
+  initializationProps: GameInitializationProps | null;
   boardGenerated: boolean;
   gameSessionId: number;
-  initGame: (props: InintalizationProps) => void;
+  initGame: (props: GameInitializationProps) => void;
   setSelectedNumber: (num: number) => void;
   handleTilePress: (x: number, y: number) => void;
 };
@@ -53,7 +57,7 @@ function calculateDynamicXPNeeded(monsters: number[]): number[] {
   return xpNeeded;
 }
 
-function createBlankGameState(props: InintalizationProps): GameState {
+function createBlankGameState(props: GameInitializationProps): GameState {
   const tiles: Tile[][] = Array.from({ length: props.sizeY }, () =>
     Array.from(
       { length: props.sizeX },
@@ -122,7 +126,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const currentTile = gameState.tiles[y]?.[x];
     const shouldTriggerRevealHaptic =
-      currentTile !== undefined && !currentTile.revealed && selectedNumber === 0;
+      currentTile !== undefined &&
+      !currentTile.revealed &&
+      selectedNumber === 0;
 
     if (!boardGenerated) {
       const gameLogic = new StandardGameMode(undefined, {

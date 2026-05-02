@@ -23,13 +23,14 @@ export type Tile = {
   monster: Monster | undefined;
 };
 
-export type InintalizationProps = {
+export type GameInitializationProps = {
   sizeX: number;
   sizeY: number;
   /** Array of monster counts by level. Index 0 is ignored. */
   monsters: number[];
   initialHP: number;
   initialTap?: Vector2;
+  blind?: boolean;
 };
 
 export type Vector2 = {

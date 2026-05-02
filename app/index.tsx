@@ -5,8 +5,35 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Monster Sweeper</Text>
-      <Link href="/about" style={styles.button}>
-        Squares test
+      <Link
+        href={{ pathname: "/game", params: { mode: "easy" } }}
+        style={styles.button}
+      >
+        EASY
+      </Link>
+      <Link
+        href={{ pathname: "/game", params: { mode: "normal" } }}
+        style={styles.button}
+      >
+        NORMAL
+      </Link>
+      <Link
+        href={{ pathname: "/game", params: { mode: "huge" } }}
+        style={styles.button}
+      >
+        HUGE
+      </Link>
+      <Link
+        href={{ pathname: "/game", params: { mode: "blind" } }}
+        style={styles.button}
+      >
+        BLIND
+      </Link>
+      <Link
+        href={{ pathname: "/game", params: { mode: "extreme" } }}
+        style={styles.button}
+      >
+        EXTREME
       </Link>
     </View>
   );
@@ -18,17 +45,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#25292e",
+    padding: 20,
   },
   title: {
     color: "#fff",
-    fontSize: 52,
+    fontSize: 48,
+    fontWeight: "bold",
+    marginBottom: 40,
+    textAlign: "center",
+    letterSpacing: 2,
   },
   button: {
     color: "#fff",
-    fontSize: 20,
-    textDecorationLine: "underline",
-    backgroundColor: "#005068",
-    padding: 10,
-    borderRadius: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    backgroundColor: "#00789E", // slightly brighter blue
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginVertical: 10,
+    width: 220,
+    textAlign: "center",
+    overflow: "hidden",
+    elevation: 3, // for android shadow
   },
 });

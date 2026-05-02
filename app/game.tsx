@@ -6,7 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { Platform, StatusBar } from "react-native";
 
-export default function SquareTestScreen() {
+export default function GameView() {
   const { mode } = useLocalSearchParams<{ mode?: GameMode }>();
   const GameModeProps = getGameModeProps(mode != undefined ? mode : "easy");
 

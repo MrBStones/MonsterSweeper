@@ -1,8 +1,8 @@
 import { MonstersArray } from "@/constants/monsters";
 import { GameModeInterface } from "@/interfaces/gameModeInterface";
 import {
+  GameInitializationProps,
   GameState,
-  InintalizationProps,
   Tile,
   Vector2,
 } from "@/types/gameModeTypes";
@@ -12,7 +12,7 @@ export class StandardGameMode implements GameModeInterface {
 
   constructor(
     gameState?: GameState,
-    initializationProps?: InintalizationProps,
+    initializationProps?: GameInitializationProps,
   ) {
     if (gameState) {
       this.gameState = gameState;
@@ -169,7 +169,8 @@ export class StandardGameMode implements GameModeInterface {
     sizeY,
     monsters,
     initialTap,
-  }: InintalizationProps) {
+    blind,
+  }: GameInitializationProps) {
     const tiles: Tile[][] = Array.from({ length: sizeY }, () =>
       Array.from(
         { length: sizeX },
@@ -192,7 +193,7 @@ export class StandardGameMode implements GameModeInterface {
       monstersRevealed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // index 0 is unused, monster levels start at 1
       totalMonsters: monsters,
       maxMonsterLevel: monsters.length - 1,
-      playerLevel: 1,
+      playerLevel: blind ? 0 : 1,
       playerXP: 0,
       nextXP: this.calculateDynamicXPNeeded(monsters),
       playerHP: initialHP,
