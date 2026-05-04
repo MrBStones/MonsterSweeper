@@ -1,9 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { colors, radii, spacing, typography } from "@/constants/theme";
 import { useGameStore } from "@/store/gameStore";
 
 type StatBarProps = {
@@ -11,7 +11,6 @@ type StatBarProps = {
   maxValue: number;
   suffix: string;
   color: string;
-  children: ReactNode;
   showValues?: boolean;
 };
 
@@ -20,7 +19,6 @@ function StatBar({
   maxValue,
   suffix,
   color,
-  children,
   showValues = true,
 }: StatBarProps) {
   const progress =
@@ -30,7 +28,6 @@ function StatBar({
 
   return (
     <View style={styles.bar}>
-      <View style={[styles.barLeft]}>{children}</View>
       <View>
         {showValues ? (
           <Text style={styles.barText}>
@@ -43,9 +40,7 @@ function StatBar({
               styles.barInner,
               { width: `${progress}%`, backgroundColor: color },
             ]}
-          >
-            <View style={styles.borderOnly}></View>
-          </View>
+          />
         </View>
       </View>
     </View>
@@ -69,29 +64,34 @@ export default function TopbarGame() {
 
   return (
     <View style={[styles.topBar, { paddingTop: 10 + top }]}>
-      <Pressable style={styles.topBarButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="white" />
+      <Pressable
+        style={({ pressed }) => [
+          styles.topBarButton,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={() => router.back()}
+      >
+        <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <View style={styles.statsBarContainer}>
         <StatBar
           currentValue={playerHP}
           maxValue={playerMaxHP}
           suffix="HP"
-          color="#00e24b"
-        >
-          <Ionicons name="heart" size={24} color="white" />
-        </StatBar>
+          color={colors.primary}
+        />
 
-        <StatBar
-          currentValue={xpIntoLevel}
-          maxValue={xpNeededForLevel}
-          suffix="XP"
-          color="#4ea1ff"
-        >
-          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>
-            Lvl {playerLevel}
-          </Text>
-        </StatBar>
+        <View style={styles.xpGroup}>
+          <View style={styles.levelPill}>
+            <Text style={styles.levelText}>LVL {playerLevel}</Text>
+          </View>
+          <StatBar
+            currentValue={xpIntoLevel}
+            maxValue={xpNeededForLevel}
+            suffix="XP"
+            color={colors.info}
+          />
+        </View>
       </View>
     </View>
   );
@@ -104,106 +104,70 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "flex-end",
     flex: 1,
-    gap: 10,
+    gap: spacing.xs,
   },
   topBar: {
-    padding: 5,
+    paddingBottom: spacing.sm,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
+    backgroundColor: "rgba(19, 19, 19, 0.62)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(90, 90, 90, 0.45)",
   },
   barText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-    padding: 5,
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 5,
+    color: colors.textMuted,
+    fontSize: 12,
+    paddingBottom: 6,
+    ...typography.labelMono,
   },
   topBarButton: {
-    backgroundColor: "#2b3138",
-    borderRadius: 22,
+    backgroundColor: "rgba(32, 31, 31, 0.72)",
+    borderRadius: radii.xl,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 10,
-    height: 60,
-    minWidth: 60,
-    overflow: "hidden",
+    paddingHorizontal: spacing.md,
+    height: 52,
+    minWidth: 52,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  topBarButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
+    borderColor: "rgba(90, 90, 90, 0.55)",
   },
   bar: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
   },
   barOuter: {
-    height: 30,
-    width: 120,
-    backgroundColor: "black",
-    borderEndEndRadius: 10,
-    borderTopEndRadius: 10,
+    height: 18,
+    width: 92,
+    backgroundColor: "rgba(19, 19, 19, 0.5)",
+    borderRadius: radii.full,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
+    borderWidth: 1,
+    borderColor: "rgba(90, 90, 90, 0.55)",
   },
   barInner: {
-    backgroundColor: "#00e24b",
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
     height: "100%",
-    borderEndWidth: 1,
-    borderEndColor: "#ffffff63",
   },
-  barLeft: {
-    backgroundColor: "#2b3138",
-
-    borderTopEndRadius: 13,
-    borderStartStartRadius: 30,
-    borderBottomStartRadius: 30,
+  xpGroup: {
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  levelPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.full,
+    backgroundColor: "rgba(32, 31, 31, 0.72)",
     borderWidth: 1,
-
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    height: 60,
-    minWidth: 60,
-    overflow: "hidden",
-
-    borderColor: "#3c4148",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: "rgba(90, 90, 90, 0.55)",
   },
-  borderOnly: {
-    height: 30,
-    width: 120,
-    borderEndEndRadius: 10,
-    borderTopEndRadius: 10,
-    borderColor: "#3c4148",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderEndWidth: 1,
-    outlineWidth: 2,
-    outlineColor: "#3c4148",
+  levelText: {
+    color: colors.text,
+    fontSize: 12,
+    ...typography.labelMono,
+  },
+  buttonPressed: {
+    opacity: 0.95,
   },
 });

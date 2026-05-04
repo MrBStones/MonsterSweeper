@@ -2,6 +2,8 @@ import { useGameStore } from "@/store/gameStore";
 import { GameInitializationProps } from "@/types/gameModeTypes";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radii, spacing, typography } from "@/constants/theme";
+
 export default function GameOverModal({
   mode,
 }: {
@@ -37,64 +39,54 @@ export default function GameOverModal({
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(10, 12, 14, 0.78)",
+    backgroundColor: colors.modalBackdrop,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: spacing.lg,
   },
   modalCard: {
     width: "100%",
     maxWidth: 360,
-    borderRadius: 24,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    backgroundColor: "#23272d",
+    borderRadius: radii.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 16,
-    elevation: 8,
+    borderColor: colors.outline,
   },
   modalTitle: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 30,
-    fontWeight: "800",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: spacing.sm,
+    ...typography.headline,
   },
   modalText: {
-    color: "#c8d0d9",
+    color: colors.textMuted,
     fontSize: 17,
     lineHeight: 24,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: spacing.lg,
+    ...typography.body,
   },
   modalButton: {
     alignSelf: "center",
     minWidth: 140,
     paddingVertical: 14,
     paddingHorizontal: 18,
-    borderRadius: 18,
-    backgroundColor: "#00e24b",
+    borderRadius: radii.lg,
+    backgroundColor: colors.primary,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: colors.outlineStrong,
   },
   modalButtonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.99 }],
   },
   modalButtonText: {
-    color: "#101214",
+    color: colors.primaryDark,
     fontSize: 17,
-    fontWeight: "800",
     textAlign: "center",
-    letterSpacing: 0.2,
+    ...typography.labelMono,
   },
 });

@@ -2,6 +2,8 @@ import { Tile } from "@/types/gameModeTypes";
 import { memo, useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
 
+import { colors, radii, typography } from "@/constants/theme";
+
 type SquareProps = Tile & {
   rowIndex: number;
   columnIndex: number;
@@ -53,7 +55,10 @@ function Square({
   }
 
   return (
-    <Pressable onPress={() => onTilePress?.(columnIndex, rowIndex)}>
+    <Pressable
+      onPress={() => onTilePress?.(columnIndex, rowIndex)}
+      style={({ pressed }) => [pressed && styles.pressed]}
+    >
       <Animated.View
         style={[
           styles.container,
@@ -143,30 +148,35 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: radii.sm,
     margin: 2,
   },
   revealed: {
-    backgroundColor: "#0e0e0e",
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.outline,
   },
   notRevealed: {
-    borderColor: "#505050",
+    borderColor: colors.outline,
     borderWidth: 1,
-    backgroundColor: "#393939",
+    backgroundColor: colors.surfaceHigh,
   },
   num: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 24,
+    color: colors.text,
+    fontSize: 22,
+    ...typography.headline,
   },
   numMonsterHidden: {
-    color: "#00e24b",
-    fontWeight: "bold",
-    fontSize: 24,
+    color: colors.primary,
+    fontSize: 22,
+    ...typography.headline,
   },
   monsterImage: {
     width: 48,
     height: 48,
     resizeMode: "contain",
+  },
+  pressed: {
+    opacity: 0.94,
   },
 });

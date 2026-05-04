@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { colors, radii, spacing, typography } from "@/constants/theme";
 import { useGameStore } from "@/store/gameStore";
 
 export default function BottomNumberRow() {
@@ -28,7 +29,7 @@ export default function BottomNumberRow() {
               <Pressable
                 key={number}
                 onPress={() =>
-                  number == selectedNumber
+                  number === selectedNumber
                     ? setSelectedNumber(0)
                     : setSelectedNumber(number)
                 }
@@ -60,26 +61,18 @@ export default function BottomNumberRow() {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    backgroundColor: "#171a1e",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: "#2f363f",
+    borderTopColor: colors.outline,
   },
   shell: {
     overflow: "hidden",
-    borderRadius: 22,
-    backgroundColor: "#23272d",
+    borderRadius: radii.xl,
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: colors.outline,
   },
   content: {
     flexDirection: "row",
@@ -88,36 +81,35 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 48,
-    backgroundColor: "#2b3138",
+    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 10,
   },
   buttonFirst: {
-    borderTopLeftRadius: 22,
-    borderBottomLeftRadius: 22,
+    borderTopLeftRadius: radii.xl,
+    borderBottomLeftRadius: radii.xl,
   },
   buttonLast: {
-    borderTopRightRadius: 22,
-    borderBottomRightRadius: 22,
+    borderTopRightRadius: radii.xl,
+    borderBottomRightRadius: radii.xl,
   },
   buttonDivider: {
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: "rgba(255, 255, 255, 0.12)",
+    borderRightColor: colors.outline,
   },
   buttonSelected: {
-    backgroundColor: "#00e24b",
+    backgroundColor: colors.primary,
   },
   buttonPressed: {
-    opacity: 0.9,
+    opacity: 0.95,
   },
   label: {
-    color: "#edf1f6",
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: 0.2,
+    color: colors.text,
+    fontSize: 15,
+    ...typography.labelMono,
   },
   labelSelected: {
-    color: "#101214",
+    color: colors.primaryDark,
   },
 });

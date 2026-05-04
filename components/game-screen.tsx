@@ -9,6 +9,8 @@ import { GameInitializationProps } from "@/types/gameModeTypes";
 import { memo, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { colors } from "@/constants/theme";
+
 const Board = memo(({ containerWidth }: { containerWidth: number }) => {
   const tiles = useGameStore((state) => state.gameState?.tiles);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
@@ -30,6 +32,8 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
     </View>
   );
 });
+
+Board.displayName = "Board";
 
 type GameScreenProps = {
   mode: GameInitializationProps;
@@ -73,15 +77,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#2a2a2a",
+    backgroundColor: colors.background,
   },
   zoomArea: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  text: {
-    color: "#fff",
   },
   topBarOverlay: {
     position: "absolute",
