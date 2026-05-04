@@ -3,12 +3,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useGameStore } from "@/store/gameStore";
 
-type BottomNumberRowProps = {
-  maxNumber: number;
-};
-
-export default function BottomNumberRow({ maxNumber }: BottomNumberRowProps) {
+export default function BottomNumberRow() {
   const { bottom } = useSafeAreaInsets();
+  const maxNumber = useGameStore(
+    (state) => state.gameState?.maxMonsterLevel ?? 0,
+  );
   const selectedNumber = useGameStore((state) => state.selectedNumber);
   const setSelectedNumber = useGameStore((state) => state.setSelectedNumber);
   const numbers = Array.from(

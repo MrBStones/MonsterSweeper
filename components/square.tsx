@@ -1,13 +1,6 @@
 import { Tile } from "@/types/gameModeTypes";
 import { memo, useEffect, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-} from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
 
 type SquareProps = Tile & {
   rowIndex: number;
@@ -26,6 +19,7 @@ function Square({
   monster,
 }: SquareProps) {
   const revealAnim = useRef(new Animated.Value(revealed ? 1 : 0)).current;
+  const hideAnim = useRef(new Animated.Value(hideMonster ? 1 : 0)).current;
 
   useEffect(() => {
     if (revealed) {
@@ -40,6 +34,15 @@ function Square({
 
     revealAnim.setValue(0);
   }, [revealed, revealAnim]);
+
+  useEffect(() => {
+    Animated.timing(hideAnim, {
+      toValue: hideMonster ? 1 : 0,
+      duration: 100,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [hideMonster, hideAnim]);
 
   let text = "";
 
@@ -68,17 +71,51 @@ function Square({
           },
         ]}
       >
-        {revealed && monster !== undefined && !hideMonster ? (
-          <Image source={monster.imgSource} style={styles.monsterImage} />
+        {revealed && monster !== undefined ? (
+          <>
+            <Animated.Image
+              source={monster.imgSource}
+              style={[
+                styles.monsterImage,
+                { position: "absolute" },
+                {
+                  opacity: hideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
+                  }),
+                  transform: [
+                    {
+                      scale: hideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0.88],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+            <Animated.Text
+              selectable={false}
+              style={[
+                styles.numMonsterHidden,
+                {
+                  opacity: hideAnim,
+                  transform: [
+                    {
+                      scale: hideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.88, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              {value}
+            </Animated.Text>
+          </>
         ) : (
-          <Text
-            selectable={false}
-            style={
-              revealed && hideMonster && monster !== undefined
-                ? styles.numMonsterHidden
-                : styles.num
-            }
-          >
+          <Text selectable={false} style={styles.num}>
             {text}
           </Text>
         )}
