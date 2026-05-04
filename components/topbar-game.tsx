@@ -47,6 +47,15 @@ function StatBar({
   );
 }
 
+function formatElapsedTime(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+
+  return `${minutes}:${seconds}`;
+}
+
 export default function TopbarGame() {
   const { top } = useSafeAreaInsets();
   const playerHP = useGameStore((state) => state.gameState?.playerHP ?? 0);
@@ -58,6 +67,7 @@ export default function TopbarGame() {
     (state) => state.gameState?.playerLevel ?? 1,
   );
   const nextXP = useGameStore((state) => state.gameState?.nextXP ?? [0, 0]);
+  const elapsedSeconds = useGameStore((state) => state.elapsedSeconds);
   const nextLevelXP = nextXP[playerLevel + 1];
   const xpIntoLevel = playerXP;
   const xpNeededForLevel = nextLevelXP;
@@ -74,17 +84,24 @@ export default function TopbarGame() {
         <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <View style={styles.statsBarContainer}>
-        <StatBar
-          currentValue={playerHP}
-          maxValue={playerMaxHP}
-          suffix="HP"
-          color={colors.primary}
-        />
-
-        <View style={styles.xpGroup}>
+        <View style={styles.metaRow}>
+          <View style={styles.timerChip}>
+            <Ionicons name="time-outline" size={14} color={colors.primary} />
+            <Text style={styles.timerText}>
+              {formatElapsedTime(elapsedSeconds)}
+            </Text>
+          </View>
           <View style={styles.levelPill}>
             <Text style={styles.levelText}>LVL {playerLevel}</Text>
           </View>
+        </View>
+        <View style={styles.statsRow}>
+          <StatBar
+            currentValue={playerHP}
+            maxValue={playerMaxHP}
+            suffix="HP"
+            color={colors.primary}
+          />
           <StatBar
             currentValue={xpIntoLevel}
             maxValue={xpNeededForLevel}
@@ -99,17 +116,22 @@ export default function TopbarGame() {
 
 const styles = StyleSheet.create({
   statsBarContainer: {
-    flexWrap: "wrap",
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "flex-end",
     alignItems: "flex-end",
-    flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
+    width: "auto",
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: spacing.sm,
   },
   topBar: {
     paddingBottom: spacing.sm,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     backgroundColor: "rgba(19, 19, 19, 0.62)",
     borderBottomWidth: 1,
@@ -128,9 +150,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.md,
     height: 52,
-    minWidth: 52,
+    width: 52,
     borderWidth: 1,
     borderColor: "rgba(90, 90, 90, 0.55)",
+    alignSelf: "center",
   },
   bar: {
     flexDirection: "row",
@@ -138,7 +161,7 @@ const styles = StyleSheet.create({
   },
   barOuter: {
     height: 18,
-    width: 92,
+    width: 84,
     backgroundColor: "rgba(19, 19, 19, 0.5)",
     borderRadius: radii.full,
     overflow: "hidden",
@@ -150,19 +173,40 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     height: "100%",
   },
-  xpGroup: {
+  rightStatsGroup: {
     alignItems: "flex-end",
     gap: 4,
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   levelPill: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: radii.full,
     backgroundColor: "rgba(32, 31, 31, 0.72)",
     borderWidth: 1,
     borderColor: "rgba(90, 90, 90, 0.55)",
   },
   levelText: {
+    color: colors.text,
+    fontSize: 12,
+    ...typography.labelMono,
+  },
+  timerChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+    backgroundColor: "rgba(32, 31, 31, 0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(90, 90, 90, 0.55)",
+  },
+  timerText: {
     color: colors.text,
     fontSize: 12,
     ...typography.labelMono,

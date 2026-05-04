@@ -46,11 +46,26 @@ export default function GameScreen({ mode }: GameScreenProps) {
   const containerWidth = sqSize * gridW;
   const [topBarHeight, setTopBarHeight] = useState(0);
   const initGame = useGameStore((state) => state.initGame);
+  const gameSessionId = useGameStore((state) => state.gameSessionId);
+  const showGameOver = useGameStore((state) => state.showGameOver);
+  const tickTimer = useGameStore((state) => state.tickTimer);
   const isReady = useGameStore((state) => state.gameState !== null);
 
   useEffect(() => {
     initGame(mode);
   }, [initGame, mode]);
+
+  useEffect(() => {
+    if (!isReady || showGameOver) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      tickTimer();
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [gameSessionId, isReady, showGameOver, tickTimer]);
 
   if (!isReady) {
     return <View style={styles.container} />;

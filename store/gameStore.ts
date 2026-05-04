@@ -15,8 +15,10 @@ type GameStore = {
   initializationProps: GameInitializationProps | null;
   boardGenerated: boolean;
   gameSessionId: number;
+  elapsedSeconds: number;
   initGame: (props: GameInitializationProps) => void;
   setSelectedNumber: (num: number) => void;
+  tickTimer: () => void;
   handleTilePress: (x: number, y: number) => void;
 };
 
@@ -97,6 +99,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initializationProps: null,
   boardGenerated: false,
   gameSessionId: 0,
+  elapsedSeconds: 0,
 
   initGame: (props) => {
     set({
@@ -106,10 +109,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       initializationProps: props,
       boardGenerated: false,
       gameSessionId: get().gameSessionId + 1,
+      elapsedSeconds: 0,
     });
   },
 
   setSelectedNumber: (num) => set({ selectedNumber: num }),
+
+  tickTimer: () =>
+    set((state) => ({
+      elapsedSeconds: state.elapsedSeconds + 1,
+    })),
 
   handleTilePress: (x, y) => {
     const {
