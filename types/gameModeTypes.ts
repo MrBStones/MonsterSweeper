@@ -28,6 +28,8 @@ export type GameInitializationProps = {
   sizeY: number;
   /** Array of monster counts by level. Index 0 is ignored. */
   monsters: number[];
+  /** XP thresholds by player level. Index 0 is unused, and blind mode uses no level progression. */
+  nextXP: number[];
   initialHP: number;
   initialTap?: Vector2;
   blind?: boolean;

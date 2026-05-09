@@ -28,37 +28,6 @@ function snapshotGameState(gameState: GameState): GameState {
   };
 }
 
-function calculateDynamicXPNeeded(monsters: number[]): number[] {
-  const xpNeeded: number[] = [0, 0];
-  let cumulativeXP = 0;
-
-  const earlyPacingRatios = {
-    2: 10 / 52,
-    3: 90 / 144,
-    4: 202 / 304,
-    5: 400 / 592,
-  };
-
-  for (
-    let currentLevel = 1;
-    currentLevel < monsters.length - 1;
-    currentLevel++
-  ) {
-    cumulativeXP += monsters[currentLevel] * Math.pow(2, currentLevel - 1);
-    const nextLevel = currentLevel + 1;
-
-    if (nextLevel >= 6) {
-      xpNeeded.push(cumulativeXP);
-    } else {
-      const ratio =
-        earlyPacingRatios[nextLevel as keyof typeof earlyPacingRatios];
-      xpNeeded.push(Math.round(cumulativeXP * ratio));
-    }
-  }
-
-  return xpNeeded;
-}
-
 function createBlankGameState(props: GameInitializationProps): GameState {
   const tiles: Tile[][] = Array.from({ length: props.sizeY }, () =>
     Array.from(
@@ -82,7 +51,7 @@ function createBlankGameState(props: GameInitializationProps): GameState {
     maxMonsterLevel: props.monsters.length - 1,
     playerLevel: 1,
     playerXP: 0,
-    nextXP: calculateDynamicXPNeeded(props.monsters),
+    nextXP: [...props.nextXP],
     playerHP: props.initialHP,
     playerMaxHP: props.initialHP,
   };

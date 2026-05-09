@@ -19,6 +19,28 @@ XP gains
 8: 128
 9: 256
 
+EASY:
+XP needed per level
+1 -> 2: 7
+2 -> 3: 20
+3 -> 4: 50
+4 -> 5: 82
+
+NORMAL:
+XP needed per level
+1 -> 2: 10
+2 -> 3: 50
+3 -> 4: 167
+4 -> 5: 271
+
+EXTREME:
+XP needed per level
+1 -> 2: 10
+2 -> 3: 50
+3 -> 4: 175
+4 -> 5: 375
+
+HUGE:
 XP needed per level
 1 -> 2: 10
 2 -> 3: 90

@@ -68,9 +68,9 @@ export default function TopbarGame() {
   );
   const nextXP = useGameStore((state) => state.gameState?.nextXP ?? [0, 0]);
   const elapsedSeconds = useGameStore((state) => state.elapsedSeconds);
-  const nextLevelXP = nextXP[playerLevel + 1];
+  const isBlindMode = playerLevel === 0;
+  const nextLevelXP = isBlindMode ? 0 : (nextXP[playerLevel + 1] ?? 0);
   const xpIntoLevel = playerXP;
-  const xpNeededForLevel = nextLevelXP;
 
   return (
     <View style={[styles.topBar, { paddingTop: 10 + top }]}>
@@ -92,7 +92,9 @@ export default function TopbarGame() {
             </Text>
           </View>
           <View style={styles.levelPill}>
-            <Text style={styles.levelText}>LVL {playerLevel}</Text>
+            <Text style={styles.levelText}>
+              {isBlindMode ? "LVL BLIND" : `LVL ${playerLevel}`}
+            </Text>
           </View>
         </View>
         <View style={styles.statsRow}>
@@ -102,12 +104,18 @@ export default function TopbarGame() {
             suffix="HP"
             color={colors.primary}
           />
-          <StatBar
-            currentValue={xpIntoLevel}
-            maxValue={xpNeededForLevel}
-            suffix="XP"
-            color={colors.info}
-          />
+          {isBlindMode ? (
+            <View style={styles.blindChip}>
+              <Text style={styles.blindChipText}>NO LEVELING</Text>
+            </View>
+          ) : (
+            <StatBar
+              currentValue={xpIntoLevel}
+              maxValue={nextLevelXP}
+              suffix="XP"
+              color={colors.info}
+            />
+          )}
         </View>
       </View>
     </View>
@@ -209,6 +217,22 @@ const styles = StyleSheet.create({
   timerText: {
     color: colors.text,
     fontSize: 12,
+    ...typography.labelMono,
+  },
+  blindChip: {
+    height: 18,
+    minWidth: 84,
+    paddingHorizontal: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: radii.full,
+    backgroundColor: "rgba(32, 31, 31, 0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(90, 90, 90, 0.55)",
+  },
+  blindChipText: {
+    color: colors.textMuted,
+    fontSize: 11,
     ...typography.labelMono,
   },
   buttonPressed: {
