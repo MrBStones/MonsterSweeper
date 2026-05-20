@@ -10,6 +10,7 @@ import {
 
 type GameStore = {
   gameState: GameState | null;
+  visibleTiles: Tile[][];
   selectedNumber: number;
   showGameOver: boolean;
   initializationProps: GameInitializationProps | null;
@@ -28,10 +29,10 @@ function snapshotGameState(gameState: GameState): GameState {
   };
 }
 
-function createBlankGameState(props: GameInitializationProps): GameState {
-  const tiles: Tile[][] = Array.from({ length: props.sizeY }, () =>
+function createBlankTiles(sizeX: number, sizeY: number): Tile[][] {
+  return Array.from({ length: sizeY }, () =>
     Array.from(
-      { length: props.sizeX },
+      { length: sizeX },
       (): Tile => ({
         revealed: false,
         flag: 0,
@@ -41,6 +42,10 @@ function createBlankGameState(props: GameInitializationProps): GameState {
       }),
     ),
   );
+}
+
+function createBlankGameState(props: GameInitializationProps): GameState {
+  const tiles = createBlankTiles(props.sizeX, props.sizeY);
 
   return {
     gridSizeX: props.sizeX,
@@ -57,12 +62,78 @@ function createBlankGameState(props: GameInitializationProps): GameState {
   };
 }
 
+function projectVisibleTile(previousTile: Tile, nextTile: Tile): Tile {
+  if (!nextTile.revealed) {
+    if (
+      previousTile.flag === nextTile.flag &&
+      previousTile.hideMonster === nextTile.hideMonster
+    ) {
+      return previousTile;
+    }
+
+    return {
+      ...previousTile,
+      revealed: false,
+      flag: nextTile.flag,
+      hideMonster: nextTile.hideMonster,
+    };
+  }
+
+  if (
+    previousTile.revealed === nextTile.revealed &&
+    previousTile.flag === nextTile.flag &&
+    previousTile.hideMonster === nextTile.hideMonster &&
+    previousTile.value === nextTile.value &&
+    previousTile.monster === nextTile.monster
+  ) {
+    return previousTile;
+  }
+
+  return {
+    ...nextTile,
+  };
+}
+
+function snapshotVisibleTiles(
+  previousVisibleTiles: Tile[][],
+  nextGameTiles: Tile[][],
+): Tile[][] {
+  const nextVisibleTiles = [...previousVisibleTiles];
+
+  for (let y = 0; y < nextGameTiles.length; y++) {
+    const previousRow = previousVisibleTiles[y];
+    const nextGameRow = nextGameTiles[y];
+    let nextVisibleRow = previousRow;
+
+    for (let x = 0; x < nextGameRow.length; x++) {
+      const previousTile = previousRow[x];
+      const nextTile = nextGameRow[x];
+      const visibleTile = projectVisibleTile(previousTile, nextTile);
+
+      if (visibleTile !== previousTile) {
+        if (nextVisibleRow === previousRow) {
+          nextVisibleRow = [...previousRow];
+        }
+
+        nextVisibleRow[x] = visibleTile;
+      }
+    }
+
+    if (nextVisibleRow !== previousRow) {
+      nextVisibleTiles[y] = nextVisibleRow;
+    }
+  }
+
+  return nextVisibleTiles;
+}
+
 function triggerRevealHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
   gameState: null,
+  visibleTiles: [],
   selectedNumber: 0,
   showGameOver: false,
   initializationProps: null,
@@ -73,6 +144,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initGame: (props) => {
     set({
       gameState: createBlankGameState(props),
+      visibleTiles: createBlankTiles(props.sizeX, props.sizeY),
       selectedNumber: 0,
       showGameOver: false,
       initializationProps: props,
@@ -96,6 +168,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showGameOver,
       initializationProps,
       boardGenerated,
+      visibleTiles,
     } = get();
 
     if (showGameOver || !gameState || !initializationProps) {
@@ -118,6 +191,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({
         gameState: snapshotGameState(gameLogic.gameState),
+        visibleTiles: snapshotVisibleTiles(
+          visibleTiles,
+          gameLogic.gameState.tiles,
+        ),
         selectedNumber: 0,
         showGameOver: gameLogic.gameState.playerHP <= 0,
         boardGenerated: true,
@@ -135,6 +212,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       gameState: snapshotGameState(gameLogic.gameState),
+      visibleTiles: snapshotVisibleTiles(
+        visibleTiles,
+        gameLogic.gameState.tiles,
+      ),
       selectedNumber: 0,
       showGameOver: gameLogic.gameState.playerHP <= 0,
       boardGenerated: true,

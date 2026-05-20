@@ -12,11 +12,9 @@ import { StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 
 const Board = memo(({ containerWidth }: { containerWidth: number }) => {
-  const tiles = useGameStore((state) => state.gameState?.tiles);
+  const tiles = useGameStore((state) => state.visibleTiles);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
-
-  if (!tiles) return null;
 
   return (
     <View style={[styles.board, { width: containerWidth }]}>
