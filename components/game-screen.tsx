@@ -1,5 +1,6 @@
 import BoardRow from "@/components/board-row";
 import BottomNumberRow from "@/components/bottom-number-row";
+import DamageEffect from "@/components/damage-effect";
 import GameOverModal from "@/components/game-over-modal";
 import MeasureHeight from "@/components/measure-height";
 import PinchZoom from "@/components/pinch-zoom";
@@ -18,6 +19,8 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const levelUpEffect = useGameStore((state) => state.levelUpEffect);
   const clearLevelUpEffect = useGameStore((state) => state.clearLevelUpEffect);
+  const damageEffect = useGameStore((state) => state.damageEffect);
+  const clearDamageEffect = useGameStore((state) => state.clearDamageEffect);
 
   return (
     <View style={[styles.board, { width: containerWidth }]}>
@@ -32,9 +35,16 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
       ))}
       {levelUpEffect ? (
         <LevelUpEffect
-          key={levelUpEffect.id}
+          key={`level-up-${levelUpEffect.id}`}
           effect={levelUpEffect}
           onFinished={clearLevelUpEffect}
+        />
+      ) : null}
+      {damageEffect ? (
+        <DamageEffect
+          key={`damage-${damageEffect.id}`}
+          effect={damageEffect}
+          onFinished={clearDamageEffect}
         />
       ) : null}
     </View>

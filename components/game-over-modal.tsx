@@ -90,6 +90,7 @@ export default function GameOverModal({
             style={[
               styles.modalTitle,
               currentSnapshot.isWin && styles.modalTitleWin,
+              !currentSnapshot.isWin && styles.modalTitleLose,
             ]}
           >
             {currentSnapshot.title}
@@ -171,6 +172,9 @@ const styles = StyleSheet.create({
   },
   modalTitleWin: {
     color: colors.secondary,
+  },
+  modalTitleLose: {
+    color: colors.danger,
   },
   modalText: {
     color: colors.textMuted,

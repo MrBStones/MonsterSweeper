@@ -14,6 +14,7 @@ type GameStore = {
   selectedNumber: number;
   showGameOver: boolean;
   levelUpEffect: LevelUpEffect | null;
+  damageEffect: DamageEffect | null;
   initializationProps: GameInitializationProps | null;
   boardGenerated: boolean;
   gameSessionId: number;
@@ -24,6 +25,7 @@ type GameStore = {
   resetGame: () => void;
   setSelectedNumber: (num: number) => void;
   clearLevelUpEffect: () => void;
+  clearDamageEffect: () => void;
   tickTimer: () => void;
   handleTilePress: (x: number, y: number) => void;
 };
@@ -33,6 +35,12 @@ export type LevelUpEffect = {
   x: number;
   y: number;
   level: number;
+};
+
+export type DamageEffect = {
+  id: number;
+  x: number;
+  y: number;
 };
 
 function snapshotGameState(gameState: GameState): GameState {
@@ -161,6 +169,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedNumber: 0,
   showGameOver: false,
   levelUpEffect: null,
+  damageEffect: null,
   initializationProps: null,
   boardGenerated: false,
   gameSessionId: 0,
@@ -175,6 +184,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedNumber: 0,
       showGameOver: false,
       levelUpEffect: null,
+      damageEffect: null,
       initializationProps: props,
       boardGenerated: false,
       gameSessionId: get().gameSessionId + 1,
@@ -191,6 +201,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedNumber: 0,
       showGameOver: false,
       levelUpEffect: null,
+      damageEffect: null,
       initializationProps: null,
       boardGenerated: false,
       elapsedSeconds: 0,
@@ -201,6 +212,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSelectedNumber: (num) => set({ selectedNumber: num }),
 
   clearLevelUpEffect: () => set({ levelUpEffect: null }),
+
+  clearDamageEffect: () => set({ damageEffect: null }),
 
   tickTimer: () =>
     set((state) => ({
@@ -217,6 +230,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       visibleTiles,
       gameStartedAt,
       levelUpEffect,
+      damageEffect,
     } = get();
 
     if (
@@ -244,10 +258,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
 
       const previousLevel = gameLogic.gameState.playerLevel;
+      const previousHP = gameLogic.gameState.playerHP;
       gameLogic.onPress(x, y, selectedNumber);
       const didWin = hasWonGame(gameLogic.gameState);
       const didLose = gameLogic.gameState.playerHP <= 0;
       const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
+      const didTakeDamage = gameLogic.gameState.playerHP < previousHP;
 
       set({
         gameState: snapshotGameState(gameLogic.gameState),
@@ -266,6 +282,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 level: gameLogic.gameState.playerLevel,
               }
             : levelUpEffect,
+        damageEffect:
+          didTakeDamage && currentTile?.monster
+            ? {
+                id: now,
+                x,
+                y,
+              }
+            : damageEffect,
         boardGenerated: true,
         gameStartedAt: startedAt,
         gameEndedAt: didWin || didLose ? now : null,
@@ -280,10 +304,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const gameLogic = new StandardGameMode(gameState);
     const previousLevel = gameState.playerLevel;
+    const previousHP = gameState.playerHP;
     gameLogic.onPress(x, y, selectedNumber);
     const didWin = hasWonGame(gameLogic.gameState);
     const didLose = gameLogic.gameState.playerHP <= 0;
     const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
+    const didTakeDamage = gameLogic.gameState.playerHP < previousHP;
 
     set({
       gameState: snapshotGameState(gameLogic.gameState),
@@ -302,6 +328,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
               level: gameLogic.gameState.playerLevel,
             }
           : levelUpEffect,
+      damageEffect:
+        didTakeDamage && currentTile?.monster
+          ? {
+              id: now,
+              x,
+              y,
+            }
+          : damageEffect,
       boardGenerated: true,
       gameStartedAt: startedAt,
       gameEndedAt: didWin || didLose ? now : null,
