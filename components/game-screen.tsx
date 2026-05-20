@@ -8,6 +8,7 @@ import { hasWonGame, useGameStore } from "@/store/gameStore";
 import { GameInitializationProps } from "@/types/gameModeTypes";
 import { memo, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import LevelUpEffect from "./level-up-effect";
 
 import { colors } from "@/constants/theme";
 
@@ -15,6 +16,8 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
   const tiles = useGameStore((state) => state.visibleTiles);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
+  const levelUpEffect = useGameStore((state) => state.levelUpEffect);
+  const clearLevelUpEffect = useGameStore((state) => state.clearLevelUpEffect);
 
   return (
     <View style={[styles.board, { width: containerWidth }]}>
@@ -27,6 +30,13 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
           onTilePress={handleTilePress}
         />
       ))}
+      {levelUpEffect ? (
+        <LevelUpEffect
+          key={levelUpEffect.id}
+          effect={levelUpEffect}
+          onFinished={clearLevelUpEffect}
+        />
+      ) : null}
     </View>
   );
 });

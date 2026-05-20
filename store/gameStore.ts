@@ -13,6 +13,7 @@ type GameStore = {
   visibleTiles: Tile[][];
   selectedNumber: number;
   showGameOver: boolean;
+  levelUpEffect: LevelUpEffect | null;
   initializationProps: GameInitializationProps | null;
   boardGenerated: boolean;
   gameSessionId: number;
@@ -22,8 +23,16 @@ type GameStore = {
   initGame: (props: GameInitializationProps) => void;
   resetGame: () => void;
   setSelectedNumber: (num: number) => void;
+  clearLevelUpEffect: () => void;
   tickTimer: () => void;
   handleTilePress: (x: number, y: number) => void;
+};
+
+export type LevelUpEffect = {
+  id: number;
+  x: number;
+  y: number;
+  level: number;
 };
 
 function snapshotGameState(gameState: GameState): GameState {
@@ -151,6 +160,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   visibleTiles: [],
   selectedNumber: 0,
   showGameOver: false,
+  levelUpEffect: null,
   initializationProps: null,
   boardGenerated: false,
   gameSessionId: 0,
@@ -164,6 +174,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       visibleTiles: createBlankTiles(props.sizeX, props.sizeY),
       selectedNumber: 0,
       showGameOver: false,
+      levelUpEffect: null,
       initializationProps: props,
       boardGenerated: false,
       gameSessionId: get().gameSessionId + 1,
@@ -179,6 +190,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       visibleTiles: [],
       selectedNumber: 0,
       showGameOver: false,
+      levelUpEffect: null,
       initializationProps: null,
       boardGenerated: false,
       elapsedSeconds: 0,
@@ -187,6 +199,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
 
   setSelectedNumber: (num) => set({ selectedNumber: num }),
+
+  clearLevelUpEffect: () => set({ levelUpEffect: null }),
 
   tickTimer: () =>
     set((state) => ({
@@ -202,6 +216,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       boardGenerated,
       visibleTiles,
       gameStartedAt,
+      levelUpEffect,
     } = get();
 
     if (
@@ -228,9 +243,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         initialTap: { x, y },
       });
 
+      const previousLevel = gameLogic.gameState.playerLevel;
       gameLogic.onPress(x, y, selectedNumber);
       const didWin = hasWonGame(gameLogic.gameState);
       const didLose = gameLogic.gameState.playerHP <= 0;
+      const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
 
       set({
         gameState: snapshotGameState(gameLogic.gameState),
@@ -240,6 +257,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ),
         selectedNumber: 0,
         showGameOver: didLose,
+        levelUpEffect:
+          didLevelUp && currentTile?.monster
+            ? {
+                id: now,
+                x,
+                y,
+                level: gameLogic.gameState.playerLevel,
+              }
+            : levelUpEffect,
         boardGenerated: true,
         gameStartedAt: startedAt,
         gameEndedAt: didWin || didLose ? now : null,
@@ -253,9 +279,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const gameLogic = new StandardGameMode(gameState);
+    const previousLevel = gameState.playerLevel;
     gameLogic.onPress(x, y, selectedNumber);
     const didWin = hasWonGame(gameLogic.gameState);
     const didLose = gameLogic.gameState.playerHP <= 0;
+    const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
 
     set({
       gameState: snapshotGameState(gameLogic.gameState),
@@ -265,6 +293,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ),
       selectedNumber: 0,
       showGameOver: didLose,
+      levelUpEffect:
+        didLevelUp && currentTile?.monster
+          ? {
+              id: now,
+              x,
+              y,
+              level: gameLogic.gameState.playerLevel,
+            }
+          : levelUpEffect,
       boardGenerated: true,
       gameStartedAt: startedAt,
       gameEndedAt: didWin || didLose ? now : null,
