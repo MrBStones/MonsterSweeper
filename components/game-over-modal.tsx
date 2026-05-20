@@ -2,7 +2,14 @@ import { useGameStore } from "@/store/gameStore";
 import { GameInitializationProps } from "@/types/gameModeTypes";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { colors, radii, spacing, typography } from "@/constants/theme";
 import { hasWonGame } from "@/store/gameStore";
@@ -205,7 +212,11 @@ const styles = StyleSheet.create({
   timeValue: {
     color: colors.text,
     fontSize: 18,
-    ...typography.headline,
+    fontFamily: Platform.select({
+      ios: "Menlo",
+      android: "monospace",
+      default: "monospace",
+    }),
   },
   buttonRow: {
     flexDirection: "row",

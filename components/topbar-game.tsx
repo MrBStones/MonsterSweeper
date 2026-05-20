@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors, radii, spacing, typography } from "@/constants/theme";
@@ -217,7 +217,11 @@ const styles = StyleSheet.create({
   timerText: {
     color: colors.text,
     fontSize: 12,
-    ...typography.labelMono,
+    fontFamily: Platform.select({
+      ios: "Menlo",
+      android: "monospace",
+      default: "monospace",
+    }),
   },
   blindChip: {
     height: 18,
