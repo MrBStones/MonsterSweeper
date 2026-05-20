@@ -4,7 +4,7 @@ import GameOverModal from "@/components/game-over-modal";
 import MeasureHeight from "@/components/measure-height";
 import PinchZoom from "@/components/pinch-zoom";
 import TopbarGame from "@/components/topbar-game";
-import { useGameStore } from "@/store/gameStore";
+import { hasWonGame, useGameStore } from "@/store/gameStore";
 import { GameInitializationProps } from "@/types/gameModeTypes";
 import { memo, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -46,6 +46,8 @@ export default function GameScreen({ mode }: GameScreenProps) {
   const initGame = useGameStore((state) => state.initGame);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const showGameOver = useGameStore((state) => state.showGameOver);
+  const isGameWon = useGameStore((state) => hasWonGame(state.gameState));
+  const gameStartedAt = useGameStore((state) => state.gameStartedAt);
   const tickTimer = useGameStore((state) => state.tickTimer);
   const isReady = useGameStore((state) => state.gameState !== null);
 
@@ -54,7 +56,7 @@ export default function GameScreen({ mode }: GameScreenProps) {
   }, [initGame, mode]);
 
   useEffect(() => {
-    if (!isReady || showGameOver) {
+    if (!isReady || showGameOver || isGameWon || gameStartedAt === null) {
       return;
     }
 
@@ -63,7 +65,14 @@ export default function GameScreen({ mode }: GameScreenProps) {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [gameSessionId, isReady, showGameOver, tickTimer]);
+  }, [
+    gameSessionId,
+    gameStartedAt,
+    isReady,
+    isGameWon,
+    showGameOver,
+    tickTimer,
+  ]);
 
   if (!isReady) {
     return <View style={styles.container} />;

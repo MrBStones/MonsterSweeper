@@ -3,9 +3,9 @@ import { create } from "zustand";
 
 import { StandardGameMode } from "@/game-logic/game-logic";
 import {
-    GameInitializationProps,
-    GameState,
-    Tile,
+  GameInitializationProps,
+  GameState,
+  Tile,
 } from "@/types/gameModeTypes";
 
 type GameStore = {
@@ -17,7 +17,10 @@ type GameStore = {
   boardGenerated: boolean;
   gameSessionId: number;
   elapsedSeconds: number;
+  gameStartedAt: number | null;
+  gameEndedAt: number | null;
   initGame: (props: GameInitializationProps) => void;
+  resetGame: () => void;
   setSelectedNumber: (num: number) => void;
   tickTimer: () => void;
   handleTilePress: (x: number, y: number) => void;
@@ -127,6 +130,18 @@ function snapshotVisibleTiles(
   return nextVisibleTiles;
 }
 
+export function hasWonGame(gameState: GameState | null): boolean {
+  if (!gameState) {
+    return false;
+  }
+
+  return gameState.totalMonsters.every(
+    (monsterCount, monsterLevel) =>
+      monsterLevel === 0 ||
+      gameState.monstersRevealed[monsterLevel] >= monsterCount,
+  );
+}
+
 function triggerRevealHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
@@ -140,6 +155,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   boardGenerated: false,
   gameSessionId: 0,
   elapsedSeconds: 0,
+  gameStartedAt: null,
+  gameEndedAt: null,
 
   initGame: (props) => {
     set({
@@ -151,8 +168,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       boardGenerated: false,
       gameSessionId: get().gameSessionId + 1,
       elapsedSeconds: 0,
+      gameStartedAt: null,
+      gameEndedAt: null,
     });
   },
+
+  resetGame: () =>
+    set({
+      gameState: null,
+      visibleTiles: [],
+      selectedNumber: 0,
+      showGameOver: false,
+      initializationProps: null,
+      boardGenerated: false,
+      elapsedSeconds: 0,
+      gameStartedAt: null,
+      gameEndedAt: null,
+    }),
 
   setSelectedNumber: (num) => set({ selectedNumber: num }),
 
@@ -169,11 +201,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       initializationProps,
       boardGenerated,
       visibleTiles,
+      gameStartedAt,
     } = get();
 
-    if (showGameOver || !gameState || !initializationProps) {
+    if (
+      showGameOver ||
+      hasWonGame(gameState) ||
+      !gameState ||
+      !initializationProps
+    ) {
       return;
     }
+
+    const now = Date.now();
+    const startedAt = gameStartedAt ?? now;
 
     const currentTile = gameState.tiles[y]?.[x];
     const shouldTriggerRevealHaptic =
@@ -188,6 +229,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
 
       gameLogic.onPress(x, y, selectedNumber);
+      const didWin = hasWonGame(gameLogic.gameState);
+      const didLose = gameLogic.gameState.playerHP <= 0;
 
       set({
         gameState: snapshotGameState(gameLogic.gameState),
@@ -196,8 +239,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           gameLogic.gameState.tiles,
         ),
         selectedNumber: 0,
-        showGameOver: gameLogic.gameState.playerHP <= 0,
+        showGameOver: didLose,
         boardGenerated: true,
+        gameStartedAt: startedAt,
+        gameEndedAt: didWin || didLose ? now : null,
       });
 
       if (shouldTriggerRevealHaptic) {
@@ -209,6 +254,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const gameLogic = new StandardGameMode(gameState);
     gameLogic.onPress(x, y, selectedNumber);
+    const didWin = hasWonGame(gameLogic.gameState);
+    const didLose = gameLogic.gameState.playerHP <= 0;
 
     set({
       gameState: snapshotGameState(gameLogic.gameState),
@@ -217,8 +264,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gameLogic.gameState.tiles,
       ),
       selectedNumber: 0,
-      showGameOver: gameLogic.gameState.playerHP <= 0,
+      showGameOver: didLose,
       boardGenerated: true,
+      gameStartedAt: startedAt,
+      gameEndedAt: didWin || didLose ? now : null,
     });
 
     if (shouldTriggerRevealHaptic) {

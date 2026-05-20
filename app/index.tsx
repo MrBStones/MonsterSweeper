@@ -13,6 +13,7 @@ const MODES = [
   { id: "huge", label: "Huge", color: colors.secondary },
   { id: "blind", label: "Blind", color: colors.outlineStrong },
   { id: "extreme", label: "Extreme", color: colors.danger },
+  { id: "test", label: "Test", color: colors.primaryStrong },
 ] as const;
 
 export default function Index() {

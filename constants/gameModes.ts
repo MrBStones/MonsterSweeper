@@ -52,10 +52,27 @@ export const EXTREMEProps: GameInitializationProps = {
   nextXP: EXTREMENextXP,
 };
 
-export type GameMode = "easy" | "normal" | "huge" | "blind" | "extreme";
+export const TESTProps: GameInitializationProps = {
+  sizeX: 5,
+  sizeY: 5,
+  initialHP: 1,
+  initialTap: { x: 0, y: 0 },
+  monsters: [0, 1, 1],
+  nextXP: [0, 0, 1],
+};
+
+export type GameMode =
+  | "easy"
+  | "normal"
+  | "huge"
+  | "blind"
+  | "extreme"
+  | "test";
 
 export function getGameModeProps(mode: GameMode): GameInitializationProps {
   switch (mode) {
+    case "test":
+      return TESTProps;
     case "easy":
       return EASYProps;
     case "normal":
