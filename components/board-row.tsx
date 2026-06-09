@@ -1,4 +1,5 @@
 import Square from "@/components/square";
+import { useGameStore } from "@/store/gameStore";
 import { Tile } from "@/types/gameModeTypes";
 import { memo } from "react";
 import { View } from "react-native";
@@ -8,6 +9,7 @@ type BoardRowProps = {
   rowIndex: number;
   gameSessionId: number;
   onTilePress: (x: number, y: number) => void;
+  onTileLongPress: (x: number, y: number, flag?: number) => void;
 };
 
 function BoardRow({
@@ -15,15 +17,21 @@ function BoardRow({
   rowIndex,
   gameSessionId,
   onTilePress,
+  onTileLongPress,
 }: BoardRowProps) {
+  const isActiveRow = useGameStore(
+    (state) => state.activeLongPressTile?.y === rowIndex,
+  );
+
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, isActiveRow && { zIndex: 100 }]}>
       {row.map((tile, columnIndex) => (
         <Square
           key={`${gameSessionId}-${rowIndex}-${columnIndex}`}
           rowIndex={rowIndex}
           columnIndex={columnIndex}
           onTilePress={onTilePress}
+          onTileLongPress={onTileLongPress}
           revealed={tile.revealed}
           flag={tile.flag}
           monster={tile.monster}
@@ -40,7 +48,8 @@ export default memo(
   (previousProps, nextProps) =>
     previousProps.row === nextProps.row &&
     previousProps.rowIndex === nextProps.rowIndex &&
-    previousProps.onTilePress === nextProps.onTilePress,
+    previousProps.onTilePress === nextProps.onTilePress &&
+    previousProps.onTileLongPress === nextProps.onTileLongPress,
 );
 
 const styles = {

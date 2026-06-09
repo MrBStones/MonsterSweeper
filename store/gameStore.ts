@@ -21,6 +21,13 @@ type GameStore = {
   elapsedSeconds: number;
   gameStartedAt: number | null;
   gameEndedAt: number | null;
+  isPanningDisabled: boolean;
+  activeLongPressTile: { x: number; y: number } | null;
+  boardScale: number;
+  longPressPageCoords: { pageX: number; pageY: number } | null;
+  hoveredFlagNumber: number | null;
+  topBarHeight: number;
+  bottomBarHeight: number;
   initGame: (props: GameInitializationProps) => void;
   resetGame: () => void;
   setSelectedNumber: (num: number) => void;
@@ -28,6 +35,14 @@ type GameStore = {
   clearDamageEffect: () => void;
   tickTimer: () => void;
   handleTilePress: (x: number, y: number) => void;
+  handleTileLongPress: (x: number, y: number, flag?: number) => void;
+  setIsPanningDisabled: (disabled: boolean) => void;
+  setActiveLongPressTile: (tile: { x: number; y: number } | null) => void;
+  setBoardScale: (scale: number) => void;
+  setLongPressPageCoords: (coords: { pageX: number; pageY: number } | null) => void;
+  setHoveredFlagNumber: (num: number | null) => void;
+  setTopBarHeight: (height: number) => void;
+  setBottomBarHeight: (height: number) => void;
 };
 
 export type LevelUpEffect = {
@@ -159,9 +174,9 @@ export function hasWonGame(gameState: GameState | null): boolean {
   );
 }
 
-function triggerRevealHaptic() {
+const triggerRevealHaptic = () => {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-}
+};
 
 export const useGameStore = create<GameStore>((set, get) => ({
   gameState: null,
@@ -176,6 +191,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
   elapsedSeconds: 0,
   gameStartedAt: null,
   gameEndedAt: null,
+  isPanningDisabled: false,
+  activeLongPressTile: null,
+  boardScale: 1,
+  longPressPageCoords: null,
+  hoveredFlagNumber: null,
+  topBarHeight: 0,
+  bottomBarHeight: 0,
+
+  setIsPanningDisabled: (disabled) => set({ isPanningDisabled: disabled }),
+  setActiveLongPressTile: (tile) => set({ activeLongPressTile: tile }),
+  setBoardScale: (scale) => set({ boardScale: scale }),
+  setLongPressPageCoords: (coords) => set({ longPressPageCoords: coords }),
+  setHoveredFlagNumber: (num) => set({ hoveredFlagNumber: num }),
+  setTopBarHeight: (height) => set({ topBarHeight: height }),
+  setBottomBarHeight: (height) => set({ bottomBarHeight: height }),
 
   initGame: (props) => {
     set({
@@ -191,6 +221,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       elapsedSeconds: 0,
       gameStartedAt: null,
       gameEndedAt: null,
+      isPanningDisabled: false,
+      activeLongPressTile: null,
+      boardScale: 1,
+      longPressPageCoords: null,
+      hoveredFlagNumber: null,
+      topBarHeight: 0,
+      bottomBarHeight: 0,
     });
   },
 
@@ -207,6 +244,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       elapsedSeconds: 0,
       gameStartedAt: null,
       gameEndedAt: null,
+      isPanningDisabled: false,
+      activeLongPressTile: null,
+      boardScale: 1,
+      longPressPageCoords: null,
+      hoveredFlagNumber: null,
+      topBarHeight: 0,
+      bottomBarHeight: 0,
     }),
 
   setSelectedNumber: (num) => set({ selectedNumber: num }),
@@ -308,8 +352,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     gameLogic.onPress(x, y, selectedNumber);
     const didWin = hasWonGame(gameLogic.gameState);
     const didLose = gameLogic.gameState.playerHP <= 0;
-    const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
-    const didTakeDamage = gameLogic.gameState.playerHP < previousHP;
+    const didLevelUp = gameState.playerLevel > previousLevel;
+    const didTakeDamage = gameState.playerHP < previousHP;
 
     set({
       gameState: snapshotGameState(gameLogic.gameState),
@@ -344,5 +388,151 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (shouldTriggerRevealHaptic) {
       triggerRevealHaptic();
     }
+  },
+
+  handleTileLongPress: (x, y, flag) => {
+    const {
+      gameState,
+      selectedNumber,
+      showGameOver,
+      initializationProps,
+      boardGenerated,
+      visibleTiles,
+      gameStartedAt,
+      levelUpEffect,
+      damageEffect,
+    } = get();
+
+    if (
+      showGameOver ||
+      hasWonGame(gameState) ||
+      !gameState ||
+      !initializationProps
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+    const startedAt = gameStartedAt ?? now;
+
+    const currentTile = gameState.tiles[y]?.[x];
+    if (currentTile?.revealed) {
+      return;
+    }
+
+    if (flag === 0) {
+      if (currentTile) {
+        const nextTiles = [...gameState.tiles];
+        const nextRow = [...nextTiles[y]];
+        nextRow[x] = {
+          ...currentTile,
+          flag: 0,
+        };
+        nextTiles[y] = nextRow;
+
+        set({
+          gameState: {
+            ...gameState,
+            tiles: nextTiles,
+          },
+          visibleTiles: snapshotVisibleTiles(
+            visibleTiles,
+            nextTiles,
+          ),
+        });
+
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        return;
+      }
+    }
+
+    const flagToUse = flag !== undefined ? flag : (selectedNumber > 0 ? selectedNumber : Math.max(1, gameState.playerLevel));
+
+    if (!boardGenerated) {
+      const gameLogic = new StandardGameMode(undefined, {
+        ...initializationProps,
+        initialTap: { x, y },
+      });
+
+      const previousLevel = gameLogic.gameState.playerLevel;
+      const previousHP = gameLogic.gameState.playerHP;
+      gameLogic.onPress(x, y, flagToUse);
+      const didWin = hasWonGame(gameLogic.gameState);
+      const didLose = gameLogic.gameState.playerHP <= 0;
+      const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
+      const didTakeDamage = gameLogic.gameState.playerHP < previousHP;
+
+      set({
+        gameState: snapshotGameState(gameLogic.gameState),
+        visibleTiles: snapshotVisibleTiles(
+          visibleTiles,
+          gameLogic.gameState.tiles,
+        ),
+        showGameOver: didLose,
+        levelUpEffect:
+          didLevelUp && currentTile?.monster
+            ? {
+                id: now,
+                x,
+                y,
+                level: gameLogic.gameState.playerLevel,
+              }
+            : levelUpEffect,
+        damageEffect:
+          didTakeDamage && currentTile?.monster
+            ? {
+                id: now,
+                x,
+                y,
+              }
+            : damageEffect,
+        boardGenerated: true,
+        gameStartedAt: startedAt,
+        gameEndedAt: didWin || didLose ? now : null,
+      });
+
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      return;
+    }
+
+    const gameLogic = new StandardGameMode(gameState);
+    const previousLevel = gameState.playerLevel;
+    const previousHP = gameState.playerHP;
+    gameLogic.onPress(x, y, flagToUse);
+    const didWin = hasWonGame(gameLogic.gameState);
+    const didLose = gameLogic.gameState.playerHP <= 0;
+    const didLevelUp = gameLogic.gameState.playerLevel > previousLevel;
+    const didTakeDamage = gameLogic.gameState.playerHP < previousHP;
+
+    set({
+      gameState: snapshotGameState(gameLogic.gameState),
+      visibleTiles: snapshotVisibleTiles(
+        visibleTiles,
+        gameLogic.gameState.tiles,
+      ),
+      showGameOver: didLose,
+      levelUpEffect:
+        didLevelUp && currentTile?.monster
+          ? {
+              id: now,
+              x,
+              y,
+              level: gameLogic.gameState.playerLevel,
+            }
+          : levelUpEffect,
+      damageEffect:
+        didTakeDamage && currentTile?.monster
+          ? {
+              id: now,
+              x,
+              y,
+            }
+          : damageEffect,
+      boardGenerated: true,
+      gameStartedAt: startedAt,
+      gameEndedAt: didWin || didLose ? now : null,
+    });
+
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   },
 }));

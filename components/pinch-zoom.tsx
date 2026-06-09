@@ -9,6 +9,8 @@ import {
   ViewStyle,
 } from "react-native";
 
+import { useGameStore } from "@/store/gameStore";
+
 type PinchZoomProps = {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -184,6 +186,7 @@ export default function PinchZoom({
     translateX.setValue(clampedTranslate.x);
     translateY.setValue(clampedTranslate.y);
     scale.setValue(nextScale);
+    useGameStore.getState().setBoardScale(nextScale);
   };
 
   const finishInteraction = () => {
@@ -264,18 +267,34 @@ export default function PinchZoom({
   useEffect(() => () => stopInertia(), []);
 
   const responder = PanResponder.create({
-    onStartShouldSetPanResponderCapture: (event) =>
-      event.nativeEvent.touches.length === 2,
-    onMoveShouldSetPanResponderCapture: (event, gestureState) =>
-      event.nativeEvent.touches.length >= 2 ||
-      (canPanAtScale(currentScale.current) &&
-        (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
-          Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
-    onMoveShouldSetPanResponder: (event, gestureState) =>
-      event.nativeEvent.touches.length >= 2 ||
-      (canPanAtScale(currentScale.current) &&
-        (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
-          Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP)),
+    onStartShouldSetPanResponderCapture: (event) => {
+      if (useGameStore.getState().isPanningDisabled) {
+        return false;
+      }
+      return event.nativeEvent.touches.length === 2;
+    },
+    onMoveShouldSetPanResponderCapture: (event, gestureState) => {
+      if (useGameStore.getState().isPanningDisabled) {
+        return false;
+      }
+      return (
+        event.nativeEvent.touches.length >= 2 ||
+        (canPanAtScale(currentScale.current) &&
+          (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
+            Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP))
+      );
+    },
+    onMoveShouldSetPanResponder: (event, gestureState) => {
+      if (useGameStore.getState().isPanningDisabled) {
+        return false;
+      }
+      return (
+        event.nativeEvent.touches.length >= 2 ||
+        (canPanAtScale(currentScale.current) &&
+          (Math.abs(gestureState.dx) > PAN_ACTIVATION_SLOP ||
+            Math.abs(gestureState.dy) > PAN_ACTIVATION_SLOP))
+      );
+    },
     onPanResponderGrant: (event) => {
       stopInertia();
 

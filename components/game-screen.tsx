@@ -7,15 +7,19 @@ import PinchZoom from "@/components/pinch-zoom";
 import TopbarGame from "@/components/topbar-game";
 import { hasWonGame, useGameStore } from "@/store/gameStore";
 import { GameInitializationProps } from "@/types/gameModeTypes";
-import { memo, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { memo, useEffect, useState, SetStateAction } from "react";
+import { StyleSheet, View, Text, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LevelUpEffect from "./level-up-effect";
 
-import { colors } from "@/constants/theme";
+import { colors, radii, typography } from "@/constants/theme";
+
+
 
 const Board = memo(({ containerWidth }: { containerWidth: number }) => {
   const tiles = useGameStore((state) => state.visibleTiles);
   const handleTilePress = useGameStore((state) => state.handleTilePress);
+  const handleTileLongPress = useGameStore((state) => state.handleTileLongPress);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const levelUpEffect = useGameStore((state) => state.levelUpEffect);
   const clearLevelUpEffect = useGameStore((state) => state.clearLevelUpEffect);
@@ -31,6 +35,7 @@ const Board = memo(({ containerWidth }: { containerWidth: number }) => {
           rowIndex={rowIndex}
           gameSessionId={gameSessionId}
           onTilePress={handleTilePress}
+          onTileLongPress={handleTileLongPress}
         />
       ))}
       {levelUpEffect ? (
@@ -62,7 +67,9 @@ export default function GameScreen({ mode }: GameScreenProps) {
   const sqSize = 64;
 
   const containerWidth = sqSize * gridW;
-  const [topBarHeight, setTopBarHeight] = useState(0);
+  const topBarHeight = useGameStore((state) => state.topBarHeight);
+  const setTopBarHeightStore = useGameStore((state) => state.setTopBarHeight);
+  const setBottomBarHeightStore = useGameStore((state) => state.setBottomBarHeight);
   const initGame = useGameStore((state) => state.initGame);
   const gameSessionId = useGameStore((state) => state.gameSessionId);
   const showGameOver = useGameStore((state) => state.showGameOver);
@@ -70,6 +77,27 @@ export default function GameScreen({ mode }: GameScreenProps) {
   const gameStartedAt = useGameStore((state) => state.gameStartedAt);
   const tickTimer = useGameStore((state) => state.tickTimer);
   const isReady = useGameStore((state) => state.gameState !== null);
+
+  const activeLongPressTile = useGameStore((state) => state.activeLongPressTile);
+  const longPressPageCoords = useGameStore((state) => state.longPressPageCoords);
+  const hoveredFlagNumber = useGameStore((state) => state.hoveredFlagNumber);
+
+  const setTopBarHeight = (value: SetStateAction<number>) => {
+    if (typeof value === "function") {
+      setTopBarHeightStore(value(useGameStore.getState().topBarHeight));
+    } else {
+      setTopBarHeightStore(value);
+    }
+  };
+
+  const setBottomBarHeight = (value: SetStateAction<number>) => {
+    if (typeof value === "function") {
+      setBottomBarHeightStore(value(useGameStore.getState().bottomBarHeight));
+    } else {
+      setBottomBarHeightStore(value);
+    }
+  };
+
 
   useEffect(() => {
     initGame(mode);
@@ -107,8 +135,89 @@ export default function GameScreen({ mode }: GameScreenProps) {
       <MeasureHeight setHeight={setTopBarHeight} style={styles.topBarOverlay}>
         <TopbarGame />
       </MeasureHeight>
-      <BottomNumberRow />
+      <MeasureHeight setHeight={setBottomBarHeight}>
+        <BottomNumberRow />
+      </MeasureHeight>
       <GameOverModal mode={mode} />
+
+      {activeLongPressTile !== null && longPressPageCoords !== null && (
+        <LongPressMenu
+          coords={longPressPageCoords}
+          maxNumber={mode.monsters.length - 1}
+          hoveredFlagNumber={hoveredFlagNumber}
+        />
+      )}
+    </View>
+  );
+}
+
+type LongPressMenuProps = {
+  coords: { pageX: number; pageY: number };
+  maxNumber: number;
+  hoveredFlagNumber: number | null;
+};
+
+function LongPressMenu({ coords, maxNumber, hoveredFlagNumber }: LongPressMenuProps) {
+  const { height: screenHeight } = useWindowDimensions();
+  const { top: safeTop, bottom: safeBottom } = useSafeAreaInsets();
+  const topBarHeight = useGameStore((state) => state.topBarHeight);
+  const bottomBarHeight = useGameStore((state) => state.bottomBarHeight);
+
+  const numbers = Array.from(
+    { length: Math.max(0, maxNumber) },
+    (_, index) => index + 1,
+  );
+  const options = [0, ...numbers];
+  const N = options.length;
+  const menuHeight = N * 36 + (N - 1) * 4 + 8; // buttons + gaps + padding
+
+  // Position it centered vertically, and horizontally either on the left or right of the touch depending on screen edge collision
+  const isTooCloseToLeft = coords.pageX < 90;
+  const menuLeft = isTooCloseToLeft ? coords.pageX + 16 : coords.pageX - 52;
+
+  // Clamp vertical position inside screen safe areas and top/bottom bar heights
+  const originalMenuTop = coords.pageY - menuHeight / 2;
+  const minY = Math.max(safeTop + 8, topBarHeight + 8);
+  const maxY = Math.min(
+    screenHeight - safeBottom - 8 - menuHeight,
+    screenHeight - bottomBarHeight - 8 - menuHeight,
+  );
+  const menuTop = Math.min(Math.max(originalMenuTop, minY), maxY);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.globalMenuContainer,
+        {
+          left: menuLeft,
+          top: menuTop,
+          height: menuHeight,
+        },
+      ]}
+    >
+      {options.map((val) => {
+        const isHovered = hoveredFlagNumber === val;
+        const displayLabel = val === 0 ? "X" : val + "";
+        return (
+          <View
+            key={val}
+            style={[
+              styles.globalMenuButton,
+              isHovered && styles.globalMenuButtonHovered,
+            ]}
+          >
+            <Text
+              style={[
+                styles.globalMenuText,
+                isHovered && styles.globalMenuTextHovered,
+              ]}
+            >
+              {displayLabel}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -133,5 +242,45 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     elevation: 10,
+  },
+  globalMenuContainer: {
+    position: "absolute",
+    flexDirection: "column",
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.outline,
+    padding: 4,
+    gap: 4,
+    alignItems: "center",
+    zIndex: 9999,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 10,
+  },
+  globalMenuButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.outline,
+  },
+  globalMenuButtonHovered: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  globalMenuText: {
+    color: colors.text,
+    fontSize: 14,
+    ...typography.labelMono,
+  },
+  globalMenuTextHovered: {
+    color: colors.primaryDark,
+    fontWeight: "bold",
   },
 });
