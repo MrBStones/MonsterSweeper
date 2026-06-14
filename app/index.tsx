@@ -1,7 +1,7 @@
 import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -17,6 +17,7 @@ const MODES = [
 ] as const;
 
 export default function Index() {
+  const router = useRouter();
   const [selectedMode, setSelectedMode] = useState<string>("easy");
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -71,21 +72,28 @@ export default function Index() {
             </View>
           </Pressable>
 
-          <View style={styles.cardContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.cardContainer,
+              styles.interactiveCard,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={() => router.push("/options")}
+          >
             <View style={styles.cardCenterContent}>
               <View style={styles.cardIconShellSecondary}>
                 <Ionicons
                   name="settings-outline"
                   size={30}
-                  color={colors.secondary}
+                  color={colors.primary}
                 />
               </View>
-              <Text style={[styles.cardTitle, styles.cardTitleSecondary]}>
+              <Text style={styles.cardTitle}>
                 Options
               </Text>
-              <Text style={styles.cardSubtitle}>Coming Soon</Text>
+              <Text style={styles.cardSubtitle}>Configure gameplay</Text>
             </View>
-          </View>
+          </Pressable>
         </View>
       </View>
 

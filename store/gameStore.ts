@@ -1,5 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import { Platform } from "react-native";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import { StandardGameMode } from "@/game-logic/game-logic";
 import {
@@ -7,6 +10,10 @@ import {
   GameState,
   Tile,
 } from "@/types/gameModeTypes";
+
+export type AppOptions = {
+  longPressDelay: number;
+};
 
 type GameStore = {
   gameState: GameState | null;
@@ -28,6 +35,7 @@ type GameStore = {
   hoveredFlagNumber: number | null;
   topBarHeight: number;
   bottomBarHeight: number;
+  options: AppOptions;
   initGame: (props: GameInitializationProps) => void;
   resetGame: () => void;
   setSelectedNumber: (num: number) => void;
@@ -43,6 +51,7 @@ type GameStore = {
   setHoveredFlagNumber: (num: number | null) => void;
   setTopBarHeight: (height: number) => void;
   setBottomBarHeight: (height: number) => void;
+  setLongPressDelay: (delay: number) => void;
 };
 
 export type LevelUpEffect = {
@@ -178,7 +187,82 @@ const triggerRevealHaptic = () => {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-export const useGameStore = create<GameStore>((set, get) => ({
+// Safe persistent storage adapter that falls back to localStorage on Web,
+// and to a simple memory storage if AsyncStorage's native modules are not loaded/linked.
+const memoryStorage = new Map<string, string>();
+let isStorageHealthy = true;
+
+const safeStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.localStorage) {
+        return window.localStorage.getItem(name);
+      }
+    }
+    if (!isStorageHealthy) {
+      return memoryStorage.get(name) || null;
+    }
+    try {
+      return await AsyncStorage.getItem(name);
+    } catch (error) {
+      if (isStorageHealthy) {
+        isStorageHealthy = false;
+        console.warn(
+          "AsyncStorage is not available (native modules might not be linked). Falling back to memory storage.",
+        );
+      }
+      return memoryStorage.get(name) || null;
+    }
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem(name, value);
+        return;
+      }
+    }
+    if (!isStorageHealthy) {
+      memoryStorage.set(name, value);
+      return;
+    }
+    try {
+      await AsyncStorage.setItem(name, value);
+    } catch (error) {
+      if (isStorageHealthy) {
+        isStorageHealthy = false;
+        console.warn(
+          "AsyncStorage is not available (native modules might not be linked). Falling back to memory storage.",
+        );
+      }
+      memoryStorage.set(name, value);
+    }
+  },
+  removeItem: async (name: string): Promise<void> => {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.removeItem(name);
+        return;
+      }
+    }
+    if (!isStorageHealthy) {
+      memoryStorage.delete(name);
+      return;
+    }
+    try {
+      await AsyncStorage.removeItem(name);
+    } catch (error) {
+      if (isStorageHealthy) {
+        isStorageHealthy = false;
+        console.warn(
+          "AsyncStorage is not available (native modules might not be linked). Falling back to memory storage.",
+        );
+      }
+      memoryStorage.delete(name);
+    }
+  },
+};
+
+export const useGameStore = create<GameStore>()(persist((set, get) => ({
   gameState: null,
   visibleTiles: [],
   selectedNumber: 0,
@@ -198,6 +282,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hoveredFlagNumber: null,
   topBarHeight: 0,
   bottomBarHeight: 0,
+  options: {
+    longPressDelay: 150,
+  },
 
   setIsPanningDisabled: (disabled) => set({ isPanningDisabled: disabled }),
   setActiveLongPressTile: (tile) => set({ activeLongPressTile: tile }),
@@ -206,6 +293,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setHoveredFlagNumber: (num) => set({ hoveredFlagNumber: num }),
   setTopBarHeight: (height) => set({ topBarHeight: height }),
   setBottomBarHeight: (height) => set({ bottomBarHeight: height }),
+  setLongPressDelay: (delay) =>
+    set((state) => ({
+      options: {
+        ...state.options,
+        longPressDelay: delay,
+      },
+    })),
 
   initGame: (props) => {
     set({
@@ -226,8 +320,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       boardScale: 1,
       longPressPageCoords: null,
       hoveredFlagNumber: null,
-      topBarHeight: 0,
-      bottomBarHeight: 0,
     });
   },
 
@@ -249,8 +341,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       boardScale: 1,
       longPressPageCoords: null,
       hoveredFlagNumber: null,
-      topBarHeight: 0,
-      bottomBarHeight: 0,
     }),
 
   setSelectedNumber: (num) => set({ selectedNumber: num }),
@@ -535,4 +625,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   },
+}), {
+  name: "monster-sweeper-storage",
+  storage: createJSONStorage(() => safeStorage),
+  partialize: (state) => ({
+    options: state.options,
+  }),
 }));

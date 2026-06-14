@@ -158,8 +158,8 @@ type LongPressMenuProps = {
 };
 
 function LongPressMenu({ coords, maxNumber, hoveredFlagNumber }: LongPressMenuProps) {
-  const { height: screenHeight } = useWindowDimensions();
-  const { top: safeTop, bottom: safeBottom } = useSafeAreaInsets();
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
+  const { top: safeTop, bottom: safeBottom, left: safeLeft, right: safeRight } = useSafeAreaInsets();
   const topBarHeight = useGameStore((state) => state.topBarHeight);
   const bottomBarHeight = useGameStore((state) => state.bottomBarHeight);
 
@@ -169,11 +169,30 @@ function LongPressMenu({ coords, maxNumber, hoveredFlagNumber }: LongPressMenuPr
   );
   const options = [0, ...numbers];
   const N = options.length;
-  const menuHeight = N * 36 + (N - 1) * 4 + 8; // buttons + gaps + padding
 
-  // Position it centered vertically, and horizontally either on the left or right of the touch depending on screen edge collision
-  const isTooCloseToLeft = coords.pageX < 90;
-  const menuLeft = isTooCloseToLeft ? coords.pageX + 16 : coords.pageX - 52;
+  const BUTTON_SIZE = 44;
+  const menuWidth = BUTTON_SIZE + 2; // button size + borders
+  const menuHeight = N * BUTTON_SIZE + 2; // buttons + borders
+
+  // Position it centered vertically, and horizontally offset left/right from the touch to avoid hand/finger obstruction
+  const touchOffset = 48;
+  const minX = safeLeft + 8;
+  const maxX = screenWidth - safeRight - 8 - menuWidth;
+
+  const leftPosition = coords.pageX - menuWidth - touchOffset;
+  const rightPosition = coords.pageX + touchOffset;
+
+  // Spawn on the left of the touch unless it goes past the left screen limit
+  let menuLeft = leftPosition;
+  if (leftPosition < minX) {
+    menuLeft = rightPosition;
+    // Ensure it doesn't overflow the right screen edge
+    if (menuLeft > maxX) {
+      menuLeft = maxX;
+    }
+  } else if (leftPosition > maxX) {
+    menuLeft = maxX;
+  }
 
   // Clamp vertical position inside screen safe areas and top/bottom bar heights
   const originalMenuTop = coords.pageY - menuHeight / 2;
@@ -193,17 +212,23 @@ function LongPressMenu({ coords, maxNumber, hoveredFlagNumber }: LongPressMenuPr
           left: menuLeft,
           top: menuTop,
           height: menuHeight,
+          width: menuWidth,
         },
       ]}
     >
-      {options.map((val) => {
+      {options.map((val, index) => {
         const isHovered = hoveredFlagNumber === val;
+        const isFirst = index === 0;
+        const isLast = index === N - 1;
         const displayLabel = val === 0 ? "X" : val + "";
         return (
           <View
             key={val}
             style={[
               styles.globalMenuButton,
+              isFirst && styles.buttonFirst,
+              isLast && styles.buttonLast,
+              !isLast && styles.buttonDivider,
               isHovered && styles.globalMenuButtonHovered,
             ]}
           >
@@ -250,9 +275,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: colors.outline,
-    padding: 4,
-    gap: 4,
-    alignItems: "center",
+    overflow: "hidden",
     zIndex: 9999,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -261,26 +284,33 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   globalMenuButton: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
+    width: 44,
+    height: 44,
     backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.outline,
+  },
+  buttonFirst: {
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+  },
+  buttonLast: {
+    borderBottomLeftRadius: radii.xl,
+    borderBottomRightRadius: radii.xl,
+  },
+  buttonDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outline,
   },
   globalMenuButtonHovered: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   globalMenuText: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 15,
     ...typography.labelMono,
   },
   globalMenuTextHovered: {
     color: colors.primaryDark,
-    fontWeight: "bold",
   },
 });

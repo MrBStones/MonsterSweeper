@@ -31,6 +31,7 @@ function Square({
   const setLongPressPageCoords = useGameStore((state) => state.setLongPressPageCoords);
   const setHoveredFlagNumber = useGameStore((state) => state.setHoveredFlagNumber);
   const maxNumber = useGameStore((state) => state.gameState?.maxMonsterLevel ?? 0);
+  const longPressDelay = useGameStore((state) => state.options?.longPressDelay ?? 150);
 
   const { height: screenHeight } = useWindowDimensions();
   const { top: safeTop, bottom: safeBottom } = useSafeAreaInsets();
@@ -91,7 +92,7 @@ function Square({
         setLongPressPageCoords(touchStartRef.current);
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }}
-      delayLongPress={400}
+      delayLongPress={longPressDelay}
       onTouchStart={(event) => {
         isLongPressedRef.current = false;
         touchStartRef.current = {

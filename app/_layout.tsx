@@ -43,13 +43,14 @@ export default function RootLayout() {
             name="index"
             options={{ title: "Home", headerShown: false }}
           />
-          <Stack.Screen
-            name="about"
-            options={{ headerShown: false, gestureEnabled: false }}
-          />
+
           <Stack.Screen
             name="game"
             options={{ headerShown: false, gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="options"
+            options={{ headerShown: false, gestureEnabled: true }}
           />
         </Stack>
       </GestureHandlerRootView>
